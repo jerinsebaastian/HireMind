@@ -87,7 +87,7 @@ The system provides learners with a clear, measurable understanding of their job
 
 ## Author
 Jerin Sebastian  
-Contact Me: Email: [jerinotherpurpose@gmail.com](mailto:jerinotherpurpose@gmail.com)
+Contact Me: [jerinotherpurpose@gmail.com](mailto:jerinotherpurpose@gmail.com)
 
 ---
 
