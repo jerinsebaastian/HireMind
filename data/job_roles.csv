@@ -1,0 +1,49 @@
+job_role,skill,weight
+Data Analyst,Python,3
+Data Analyst,SQL,5
+Data Analyst,Machine Learning,4
+
+Web Developer,HTML,5
+Web Developer,CSS,4
+Web Developer,Python,2
+
+Software Developer,Python,5
+Software Developer,SQL,3
+Software Developer,HTML,2
+
+Backend Developer,Python,5
+Backend Developer,SQL,4
+Backend Developer,Machine Learning,2
+
+Frontend Developer,HTML,5
+Frontend Developer,CSS,5
+Frontend Developer,Python,1
+
+Full Stack Developer,Python,4
+Full Stack Developer,SQL,4
+Full Stack Developer,HTML,3
+Full Stack Developer,CSS,3
+
+Data Scientist,Python,5
+Data Scientist,SQL,3
+Data Scientist,Machine Learning,5
+
+Business Analyst,SQL,4
+Business Analyst,Python,3
+Business Analyst,HTML,1
+
+AI Engineer,Python,5
+AI Engineer,Machine Learning,5
+AI Engineer,SQL,2
+
+QA Engineer,Python,3
+QA Engineer,SQL,2
+QA Engineer,HTML,2
+
+DevOps Engineer,Python,4
+DevOps Engineer,SQL,2
+DevOps Engineer,HTML,1
+
+Technical Support Engineer,Python,2
+Technical Support Engineer,SQL,2
+Technical Support Engineer,HTML,2

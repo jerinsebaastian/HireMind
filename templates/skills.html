@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Skill Assessment - HireMind</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<div class="container">
+
+<h1>Skill Assessment</h1>
+<p><strong>Target Job Role:</strong> {{ job_role }}</p>
+
+<form action="/analyze" method="post">
+
+    <!-- Carry job role forward -->
+    <input type="hidden" name="job_role" value="{{ job_role }}">
+
+    <h3>Select Your Skill Proficiency</h3>
+
+    {% for skill in ["Python", "SQL", "Machine Learning", "HTML", "CSS"] %}
+    <div class="skill-block">
+        <label>{{ skill }}</label>
+        <div class="radio-group">
+            <input type="radio" name="{{ skill }}" value="0" required> Not Familiar
+            <input type="radio" name="{{ skill }}" value="1"> Beginner
+            <input type="radio" name="{{ skill }}" value="2"> Intermediate
+            <input type="radio" name="{{ skill }}" value="3"> Advanced
+        </div>
+    </div>
+    {% endfor %}
+
+    <button type="submit">Analyze Skills</button>
+
+</form>
+
+</div>
+</body>
+</html>

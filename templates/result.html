@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Results - HireMind</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<div class="container">
+
+<h1>Skill Gap Analysis Result</h1>
+
+<div class="highlight">
+    <p><strong>Selected Job Role:</strong> {{ job_role }}</p>
+    <p><strong>Total Skill Gap Score:</strong> {{ total_gap }}</p>
+    <h2>Job Readiness Status: {{ readiness }}</h2>
+</div>
+
+<h3>Skill Gap Details</h3>
+<table>
+    <tr>
+        <th>Skill</th>
+        <th>User Level</th>
+        <th>Required Level</th>
+        <th>Importance</th>
+        <th>Status</th>
+    </tr>
+    {% for row in gap_details %}
+    <tr>
+        <td>{{ row.skill }}</td>
+        <td>{{ row.user_level }}</td>
+        <td>{{ row.required_level }}</td>
+        <td>{{ row.weight }}</td>
+        <td class="status-{{ row.status }}">{{ row.status }}</td>
+    </tr>
+    {% endfor %}
+</table>
+
+<h3>Recommended Skills to Focus On</h3>
+{% if recommendations %}
+<table>
+    <tr>
+        <th>Skill</th>
+        <th>Priority Score</th>
+    </tr>
+    {% for rec in recommendations %}
+    <tr>
+        <td>{{ rec.skill }}</td>
+        <td>{{ rec.priority }}</td>
+    </tr>
+    {% endfor %}
+</table>
+{% else %}
+<p>🎉 You already meet all required skill levels!</p>
+{% endif %}
+
+</div>
+</body>
+</html>

@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Select Job Role - HireMind</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<div class="container">
+    <h1>HireMind</h1>
+    <p><strong>Select Your Target Job Role</strong></p>
+    <p>This helps us evaluate your job readiness accurately.</p>
+
+    <form action="/skills" method="post">
+
+    <div class="skill-block">
+        <input type="radio" name="job_role" value="Web Developer" required>
+        <label>Web Developer</label>
+    </div>
+
+    <div class="skill-block">
+        <input type="radio" name="job_role" value="Frontend Developer">
+        <label>Frontend Developer</label>
+    </div>
+
+    <div class="skill-block">
+        <input type="radio" name="job_role" value="Backend Developer">
+        <label>Backend Developer</label>
+    </div>
+
+    <div class="skill-block">
+        <input type="radio" name="job_role" value="Software Developer">
+        <label>Software Developer</label>
+    </div>
+
+    <div class="skill-block">
+        <input type="radio" name="job_role" value="Full Stack Developer">
+        <label>Full Stack Developer</label>
+    </div>
+
+    <div class="skill-block">
+        <input type="radio" name="job_role" value="QA Engineer">
+        <label>QA Engineer</label>
+    </div>
+
+    <div class="skill-block">
+        <input type="radio" name="job_role" value="Technical Support Engineer">
+        <label>Technical Support Engineer</label>
+    </div>
+
+    <div class="skill-block">
+        <input type="radio" name="job_role" value="DevOps Engineer">
+        <label>DevOps Engineer</label>
+    </div>
+
+    <div class="skill-block">
+        <input type="radio" name="job_role" value="Business Analyst">
+        <label>Business Analyst</label>
+    </div>
+
+    <div class="skill-block">
+        <input type="radio" name="job_role" value="Data Analyst">
+        <label>Data Analyst</label>
+    </div>
+
+    <div class="skill-block">
+        <input type="radio" name="job_role" value="Data Scientist">
+        <label>Data Scientist</label>
+    </div>
+
+    <div class="skill-block">
+        <input type="radio" name="job_role" value="AI Engineer">
+        <label>AI Engineer</label>
+    </div>
+
+    <button type="submit">Continue</button>
+
+</form>
+</div>
+
+</body>
+</html>

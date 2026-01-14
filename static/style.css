@@ -1,0 +1,86 @@
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    background-color: #f4f6f8;
+    margin: 0;
+    padding: 0;
+}
+
+.container {
+    width: 80%;
+    margin: auto;
+    background: #ffffff;
+    padding: 30px;
+    margin-top: 40px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    border-radius: 8px;
+}
+
+h1, h2, h3 {
+    color: #2c3e50;
+}
+
+label {
+    font-weight: bold;
+}
+
+.skill-block {
+    margin-bottom: 20px;
+}
+
+.radio-group {
+    margin-left: 15px;
+}
+
+button {
+    background-color: #2c7be5;
+    color: white;
+    padding: 10px 18px;
+    border: none;
+    border-radius: 5px;
+    font-size: 15px;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #1a5fd0;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+table th {
+    background-color: #2c7be5;
+    color: white;
+}
+
+table th, table td {
+    border: 1px solid #ddd;
+    padding: 10px;
+    text-align: center;
+}
+
+.status-Missing {
+    color: red;
+    font-weight: bold;
+}
+
+.status-Weak {
+    color: orange;
+    font-weight: bold;
+}
+
+.status-Strong {
+    color: green;
+    font-weight: bold;
+}
+
+.highlight {
+    background-color: #e9f2ff;
+    padding: 15px;
+    border-left: 5px solid #2c7be5;
+    margin-bottom: 20px;
+    border-radius: 5px;
+}
