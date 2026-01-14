@@ -39,7 +39,7 @@ The system integrates skill assessment, job role analysis, readiness prediction,
 - Machine Learning: Scikit-learn  
 - Data Processing: Pandas, NumPy  
 - Visualization: Matplotlib, Seaborn  
-- User Interface: Streamlit / Flask (as applicable)  
+- User Interface: Flask 
 
 ---
 
@@ -50,22 +50,6 @@ The system integrates skill assessment, job role analysis, readiness prediction,
 - Role-specific employability assessment  
 - Interactive and user-friendly graphical interface  
 - Administrative support for job role and system management  
-
----
-
-## Project Structure
-├── data/
-│ └── processed_data.csv
-├── models/
-│ └── readiness_model.pkl
-├── src/
-│ ├── skill_gap_analysis.py
-│ ├── readiness_prediction.py
-│ ├── recommendation_engine.py
-│ └── utils.py
-├── app.py
-├── requirements.txt
-└── README.md
 
 ---
 
@@ -103,7 +87,7 @@ The system provides learners with a clear, measurable understanding of their job
 
 ## Author
 Jerin Sebastian  
-[Contact Me](mailto:jerinotherpurpoe@gmail.com?subject=Regarding%20AI%20Skill%20Gap%20Project)
+[Contact Me](mailto:jerinotherpurpose@gmail.com)
 
 ---
 
