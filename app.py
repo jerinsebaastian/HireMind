@@ -95,7 +95,7 @@ def analyze():
     }
 
     job_requirements = get_job_requirements(job_role)
-    total_gap, gap_details, extra_features = calculate_skill_gap(...)
+    total_gap, gap_details, extra_features = calculate_skill_gap(user_skills, job_requirements)
     features = [[
         total_gap,
         extra_features["missing"],
@@ -296,6 +296,11 @@ def calculate_skill_gap(user_skills, job_requirements):
 
     for skill, weight in job_requirements.items():
         user_level = user_skills.get(skill, 0)
+
+        gap = max(0, REQUIRED_LEVEL - user_level)
+        weighted_gap = gap * weight
+        total_gap += weighted_gap
+
         if user_level == 3:
             status = "Strong"
             strong_count += 1
@@ -308,13 +313,9 @@ def calculate_skill_gap(user_skills, job_requirements):
         else:
             status = "Missing"
             missing_count += 1
+
         if weight >= 4:
             high_importance_gap += weighted_gap
-        gap = max(0, REQUIRED_LEVEL - user_level)
-        weighted_gap = gap * weight
-        total_gap += weighted_gap
-
-        status = "Strong" if user_level == 3 else "Weak" if user_level > 0 else "Missing"
 
         details.append({
             "skill": skill,
@@ -323,6 +324,7 @@ def calculate_skill_gap(user_skills, job_requirements):
             "weight": weight,
             "status": status
         })
+
 
     avg_skill_level = sum(user_skills.values()) / len(user_skills) if user_skills else 0
 
