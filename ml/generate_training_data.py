@@ -40,12 +40,18 @@ for _ in range(2000):  # generate 2000 samples
     avg_skill_level = sum(skills) / len(skills)
 
     # Logical labeling rule (for training supervision)
-    if total_gap < 5 and missing == 0:
+    score = total_gap + (missing * 2) - (strong * 1.5)
+
+    # Add slight randomness
+    score += random.uniform(-2, 2)
+
+    if score < 5:
         readiness = "Job Ready"
-    elif total_gap < 15:
+    elif score < 15:
         readiness = "Almost Ready"
     else:
         readiness = "Not Ready"
+
 
     data.append([
         total_gap,
