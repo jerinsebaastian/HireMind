@@ -683,7 +683,7 @@ button, .btn-primary, .btn-secondary {
     width: 10px;
     height: 10px;
     border-radius: 50%;
-    animation: celebrate 3s ease-out forwards;
+    animation: celebrate 2s ease-out forwards;
     box-shadow: 0 0 10px currentColor;
 }
 
@@ -765,5 +765,39 @@ button, .btn-primary, .btn-secondary {
 
     .step-indicator {
         transform: scale(0.8);
+    }
+}
+
+/* ========================================
+   ADMIN DASHBOARD - CHARTS
+   ======================================== */
+.charts-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+    gap: 24px;
+    margin-bottom: 40px;
+}
+
+.chart-card {
+    background: white;
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.chart-wrapper {
+    margin-top: 20px;
+    position: relative;
+    height: 300px;
+}
+
+.chart-wrapper canvas {
+    max-height: 300px;
+}
+
+@media (max-width: 1024px) {
+    .charts-grid {
+        grid-template-columns: 1fr;
     }
 }

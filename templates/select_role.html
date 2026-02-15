@@ -1,14 +1,9 @@
-<!DOCTYPE html>
-<html>
+{% extends "base.html" %}
+{% block content %}
 <head>
     <title>Select Job Role - HireMind</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
-<body>
-
-    <a href="/dashboard">My Dashboard</a> |
-    <a href="/logout">Logout</a>
-
 
 <div class="container">
     <div class="header">
@@ -156,5 +151,4 @@
     </form>
 </div>
 
-</body>
-</html>
+{% endblock %}

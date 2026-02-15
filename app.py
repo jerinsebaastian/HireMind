@@ -146,8 +146,13 @@ def register():
         name = request.form['name']
         email = request.form['email']
         password = request.form['password']
+        confirm_password = request.form['confirm_password']
+
+        if password != confirm_password:
+            return "Passwords do not match!"
 
         hashed_password = generate_password_hash(password)
+
 
         conn = sqlite3.connect("hiremind.db")
         cursor = conn.cursor()
@@ -183,6 +188,15 @@ def login():
         if user and check_password_hash(user[1], password):
             session['user_id'] = user[0]
             session['role'] = user[2]
+
+            # Fetch user name
+            conn = sqlite3.connect("hiremind.db")
+            cursor = conn.cursor()
+            cursor.execute("SELECT name FROM users WHERE id = ?", (user[0],))
+            name = cursor.fetchone()[0]
+            conn.close()
+
+            session['username'] = name
 
             if user[2] == 'admin':
                 return redirect(url_for('admin_dashboard'))

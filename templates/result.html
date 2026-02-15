@@ -1,5 +1,5 @@
-<!DOCTYPE html>
-<html>
+{% extends "base.html" %}
+{% block content %}
 <head>
     <title>Results - HireMind</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
@@ -203,5 +203,4 @@ function createCelebration() {
 }
 </script>
 
-</body>
-</html>
+{% endblock %}
