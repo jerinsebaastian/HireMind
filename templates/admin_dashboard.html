@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin Dashboard - HireMind</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+<h2>Admin Dashboard</h2>
+
+<p><strong>Total Users:</strong> {{ total_users }}</p>
+<p><strong>Total Assessments:</strong> {{ total_assessments }}</p>
+
+<h3>All Assessments</h3>
+
+<table border="1" cellpadding="8">
+    <tr>
+        <th>User</th>
+        <th>Job Role</th>
+        <th>Gap Score</th>
+        <th>Readiness</th>
+        <th>Date</th>
+    </tr>
+
+    {% for a in assessments %}
+    <tr>
+        <td>{{ a[0] }}</td>
+        <td>{{ a[1] }}</td>
+        <td>{{ a[2] }}</td>
+        <td>{{ a[3] }}</td>
+        <td>{{ a[4] }}</td>
+    </tr>
+    {% endfor %}
+</table>
+
+<h3>Readiness Distribution</h3>
+<canvas id="readinessChart" width="400" height="200"></canvas>
+
+<h3>Assessments by Job Role</h3>
+<canvas id="roleChart" width="400" height="200"></canvas>
+
+<br>
+<a href="/logout">Logout</a>
+
+<script>
+const readinessLabels = {{ readiness_data | map(attribute=0) | list | tojson }};
+const readinessCounts = {{ readiness_data | map(attribute=1) | list | tojson }};
+
+const roleLabels = {{ role_data | map(attribute=0) | list | tojson }};
+const roleCounts = {{ role_data | map(attribute=1) | list | tojson }};
+
+// Pie Chart
+new Chart(document.getElementById('readinessChart'), {
+    type: 'pie',
+    data: {
+        labels: readinessLabels,
+        datasets: [{
+            data: readinessCounts
+        }]
+    }
+});
+
+// Bar Chart
+new Chart(document.getElementById('roleChart'), {
+    type: 'bar',
+    data: {
+        labels: roleLabels,
+        datasets: [{
+            label: 'Assessments',
+            data: roleCounts
+        }]
+    }
+});
+</script>
+
+</body>
+</html>

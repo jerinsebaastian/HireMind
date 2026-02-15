@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Dashboard - HireMind</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<div class="container">
+    <h2>My Assessment History</h2>
+
+    {% if assessments %}
+    <table border="1" cellpadding="8">
+        <tr>
+            <th>Job Role</th>
+            <th>Gap Score</th>
+            <th>Readiness</th>
+            <th>Date</th>
+        </tr>
+
+        {% for a in assessments %}
+        <tr>
+            <td>{{ a[1] }}</td>
+            <td>{{ a[2] }}</td>
+            <td>{{ a[3] }}</td>
+            <td>{{ a[4] }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+    {% else %}
+    <p>No assessments yet.</p>
+    {% endif %}
+
+    <br>
+    <a href="/">Start New Assessment</a> |
+    <a href="/logout">Logout</a>
+</div>
+
+</body>
+</html>
