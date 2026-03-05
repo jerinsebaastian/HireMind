@@ -1,6 +1,58 @@
-skill,category
-Python,Programming
-SQL,Data
-Machine Learning,AI
-HTML,Web
-CSS,Web
+PENDING CORE FEATURES:
+1. Assesment only once
+
+ask for assesment only once at the beggining. then if the user want to assess again, he can do it again in the home. while doing a new job readiness test, he will be given two options, either do a new assesment or continue with the old saved assesment results.
+3. Readiness Probability Score
+
+Instead of only label
+
+Show: “You are 82% Job Ready”
+
+Use model.predict_proba()
+5. Admin – Dynamic Job Role Management
+
+Add new job roles
+
+Edit skill weights
+
+Delete roles
+
+Store roles in database (remove CSV dependency)
+7. View Full Assessment Details from Dashboard
+
+Click assessment → see full skill breakdown
+
+Instead of only showing summary table
+11. Career Path Recommendation
+
+Suggest next role based on skills
+
+Example:
+
+Frontend → Full Stack
+
+Data Analyst → Data Scientist
+11. Career Path Recommendation
+
+Suggest next role based on skills
+
+Example:
+
+Frontend → Full Stack
+
+Data Analyst → Data Scientist
+12. High-Importance Skill Alert System
+
+Highlight critical missing skills
+
+Show warning badge
+15. ML-Based Role Recommendation
+
+add a section where:
+
+User inputs skills
+
+Model predicts:
+
+Best suited job role
+
