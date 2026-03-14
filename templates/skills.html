@@ -4,6 +4,25 @@
     <title>Skill Assessment - HireMind</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
+
+{% if previous_assessments > 0 %}
+<script>
+window.onload = function() {
+
+    let choice = confirm(
+        "You have previous skill assessment data.\n\n" +
+        "Press OK to use previous skills.\n" +
+        "Press Cancel to take a new assessment."
+    );
+
+    if (choice) {
+        window.location.href = "/use_previous_skills_result?job_role={{ job_role }}";
+    }
+
+};
+</script>
+{% endif %}
+
 <div class="container">
     <div class="header">
         <div class="logo">
@@ -31,6 +50,16 @@
         </div>
         <p class="subtitle">Rate your proficiency level for each skill. Be honest—this helps us give you accurate recommendations.</p>
     </div>
+
+    {% if saved_skills %}
+    <div style="margin-bottom:20px;">
+        <button type="button"
+            onclick="usePreviousSkills()"
+            class="btn-secondary">
+            Use Previous Skill Assessment
+        </button>
+    </div>
+    {% endif %}
 
     <form action="/analyze" method="post">
         <input type="hidden" name="job_role" value="{{ job_role }}">
@@ -99,7 +128,58 @@
                 </svg>
             </button>
         </div>
+        <div style="margin-top:15px;">
+            <button
+                type="button"
+                class="btn-secondary"
+                onclick="saveSkills()">
+                Save Skills to Profile
+            </button>
+        </div>
     </form>
 </div>
+
+<script>
+function usePreviousSkills() {
+    fetch('/use_previous_skills', { method: 'POST' })
+        .then(response => response.json())
+        .then(data => {
+            for (let skill in data) {
+                let level = data[skill];
+                let radio = document.getElementById(skill + "_" + level);
+                if (radio) radio.checked = true;
+            }
+        });
+}
+
+function saveSkills() {
+
+    const skills = ["Python","SQL","Machine Learning","HTML","CSS"];
+
+    let data = {};
+
+    skills.forEach(skill => {
+        let selected = document.querySelector(
+            'input[name="'+skill+'"]:checked'
+        );
+
+        if (selected) {
+            data[skill] = selected.value;
+        }
+    });
+
+    fetch("/save_skill_profile", {
+        method:"POST",
+        headers:{
+            "Content-Type":"application/json"
+        },
+        body: JSON.stringify(data)
+    })
+    .then(res => res.json())
+    .then(res => alert("Skills saved successfully!"));
+
+}
+
+</script>
 
 {% endblock %}

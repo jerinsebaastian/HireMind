@@ -48,6 +48,16 @@ def init_db():
         )
     """)
 
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS user_profile_skills (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER,
+            skill_name TEXT,
+            skill_level INTEGER,
+            FOREIGN KEY (user_id) REFERENCES users(id)
+        )
+    """)
+
     # Create default admin if not exists
     cursor.execute("SELECT * FROM users WHERE email = ?", ("admin@hiremind.com",))
     admin_exists = cursor.fetchone()
@@ -79,8 +89,26 @@ def select_role():
 
 @app.route('/skills', methods=['POST'])
 def skills():
+
     job_role = request.form['job_role']
-    return render_template('skills.html', job_role=job_role)
+
+    conn = sqlite3.connect("hiremind.db")
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT COUNT(*)
+        FROM assessments
+        WHERE user_id = ?
+    """, (session['user_id'],))
+
+    previous_assessments = cursor.fetchone()[0]
+    conn.close()
+
+    return render_template(
+        "skills.html",
+        job_role=job_role,
+        previous_assessments=previous_assessments
+    )
 
 @app.route('/analyze', methods=['POST'])
 def analyze():
@@ -93,6 +121,25 @@ def analyze():
         "HTML": int(request.form['HTML']),
         "CSS": int(request.form['CSS'])
     }
+
+    conn = sqlite3.connect("hiremind.db")
+    cursor = conn.cursor()
+
+    cursor.execute("""
+    SELECT COUNT(*) FROM user_profile_skills WHERE user_id = ?
+    """, (session['user_id'],))
+
+    exists = cursor.fetchone()[0]
+
+    if exists == 0:
+        for skill, level in user_skills.items():
+            cursor.execute("""
+            INSERT INTO user_profile_skills (user_id, skill_name, skill_level)
+            VALUES (?, ?, ?)
+            """, (session['user_id'], skill, level))
+
+    conn.commit()
+    conn.close()
 
     job_requirements = get_job_requirements(job_role)
     total_gap, gap_details, extra_features = calculate_skill_gap(user_skills, job_requirements)
@@ -132,12 +179,12 @@ def analyze():
 
 
     return render_template(
-        'result.html',
-        job_role=job_role,
-        total_gap=total_gap,
-        readiness=readiness,
-        gap_details=gap_details,
-        recommendations=recommendations
+    'result.html',
+    job_role=job_role,
+    total_gap=total_gap,
+    readiness=readiness,
+    gap_details=gap_details,
+    recommendations=recommendations
     )
 
 @app.route('/register', methods=['GET', 'POST'])
@@ -285,6 +332,104 @@ def dashboard():
     conn.close()
 
     return render_template('dashboard.html', assessments=assessments)
+
+@app.route('/use_previous_skills', methods=['POST'])
+def use_previous_skills():
+
+    conn = sqlite3.connect("hiremind.db")
+    cursor = conn.cursor()
+
+    cursor.execute("""
+    SELECT skill_name, skill_level
+    FROM user_profile_skills
+    WHERE user_id = ?
+    """, (session['user_id'],))
+
+    rows = cursor.fetchall()
+    conn.close()
+
+    skills = {row[0]: row[1] for row in rows}
+
+    return skills
+
+@app.route('/use_previous_skills_result')
+def use_previous_skills_result():
+
+    job_role = request.args.get('job_role')
+
+    conn = sqlite3.connect("hiremind.db")
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT skill_name, user_level
+        FROM user_skills
+        WHERE assessment_id = (
+            SELECT id FROM assessments
+            WHERE user_id = ?
+            ORDER BY created_at DESC
+            LIMIT 1
+        )
+    """, (session['user_id'],))
+
+    rows = cursor.fetchall()
+    conn.close()
+
+    user_skills = {row[0]: row[1] for row in rows}
+
+    job_requirements = get_job_requirements(job_role)
+
+    total_gap, gap_details, extra_features = calculate_skill_gap(
+        user_skills, job_requirements
+    )
+
+    features = [[
+        total_gap,
+        extra_features["missing"],
+        extra_features["weak"],
+        extra_features["moderate"],
+        extra_features["strong"],
+        extra_features["avg_level"],
+        extra_features["high_importance_gap"]
+    ]]
+
+    readiness = predict_readiness_ml(features)
+
+    recommendations = generate_recommendations(gap_details)
+
+    return render_template(
+        'result.html',
+        job_role=job_role,
+        total_gap=total_gap,
+        readiness=readiness,
+        gap_details=gap_details,
+        recommendations=recommendations
+    )
+
+@app.route('/save_skill_profile', methods=['POST'])
+def save_skill_profile():
+
+    data = request.json
+
+    conn = sqlite3.connect("hiremind.db")
+    cursor = conn.cursor()
+
+    cursor.execute("""
+    DELETE FROM user_profile_skills
+    WHERE user_id = ?
+    """, (session['user_id'],))
+
+    for skill, level in data.items():
+
+        cursor.execute("""
+        INSERT INTO user_profile_skills
+        (user_id, skill_name, skill_level)
+        VALUES (?, ?, ?)
+        """, (session['user_id'], skill, level))
+
+    conn.commit()
+    conn.close()
+
+    return {"status":"success"}
 
 
 # ---------------- LOGIC ----------------
