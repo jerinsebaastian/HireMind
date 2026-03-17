@@ -58,6 +58,24 @@ def init_db():
         )
     """)
 
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS job_roles (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            role_name TEXT UNIQUE,
+            icon TEXT DEFAULT '💼'
+        )
+        """)
+
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS job_skills (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            role_id INTEGER,
+            skill_name TEXT,
+            weight INTEGER,
+            FOREIGN KEY (role_id) REFERENCES job_roles(id)
+        )
+        """)
+
     # Create default admin if not exists
     cursor.execute("SELECT * FROM users WHERE email = ?", ("admin@hiremind.com",))
     admin_exists = cursor.fetchone()
@@ -79,13 +97,95 @@ def init_db():
 model = joblib.load("ml/readiness_model.pkl")
 encoder = joblib.load("ml/label_encoder.pkl")
 
+# ----------------career paths----------------
+
+career_paths = {
+
+"Frontend Developer": [
+"Full Stack Developer",
+"UI Engineer",
+"Web Architect"
+],
+
+"Backend Developer": [
+"Full Stack Developer",
+"DevOps Engineer",
+"Software Architect"
+],
+
+"Web Developer": [
+"Frontend Developer",
+"Backend Developer",
+"Full Stack Developer"
+],
+
+"Software Developer": [
+"Software Architect",
+"Tech Lead",
+"Engineering Manager"
+],
+
+"Data Analyst": [
+"Data Scientist",
+"Business Intelligence Engineer",
+"Data Engineer"
+],
+
+"Data Scientist": [
+"AI Engineer",
+"ML Engineer",
+"AI Researcher"
+],
+
+"AI Engineer": [
+"ML Architect",
+"AI Research Scientist",
+"AI Product Lead"
+],
+
+"DevOps Engineer": [
+"Cloud Engineer",
+"Site Reliability Engineer",
+"Platform Engineer"
+],
+
+"QA Engineer": [
+"Automation Engineer",
+"Test Architect",
+"QA Lead"
+],
+
+"Technical Support Engineer": [
+"System Administrator",
+"DevOps Engineer",
+"Cloud Support Engineer"
+],
+
+"Business Analyst": [
+"Product Manager",
+"Data Analyst",
+"Strategy Consultant"
+]
+
+}
+
 # ---------------- ROUTES ----------------
 
 @app.route('/')
 def select_role():
+
     if 'user_id' not in session:
         return redirect(url_for('login'))
-    return render_template('select_role.html')
+
+    conn = sqlite3.connect("hiremind.db")
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT role_name, icon FROM job_roles")
+    roles = cursor.fetchall()
+
+    conn.close()
+
+    return render_template('select_role.html', roles=roles)
 
 @app.route('/skills', methods=['POST'])
 def skills():
@@ -154,6 +254,8 @@ def analyze():
     ]]
     readiness = predict_readiness_ml(features)
     recommendations = generate_recommendations(gap_details)
+    role_suggestions = recommend_roles(user_skills)
+
     # Save assessment to database
     conn = sqlite3.connect("hiremind.db")
     cursor = conn.cursor()
@@ -177,14 +279,17 @@ def analyze():
     conn.commit()
     conn.close()
 
-
+    paths = generate_career_paths(job_role, gap_details)
+    
     return render_template(
-    'result.html',
-    job_role=job_role,
-    total_gap=total_gap,
-    readiness=readiness,
-    gap_details=gap_details,
-    recommendations=recommendations
+        'result.html',
+        job_role=job_role,
+        total_gap=total_gap,
+        readiness=readiness,
+        gap_details=gap_details,
+        recommendations=recommendations,
+        career_paths=paths,
+        role_suggestions=role_suggestions
     )
 
 @app.route('/register', methods=['GET', 'POST'])
@@ -301,6 +406,10 @@ def admin_dashboard():
     """)
     role_data = cursor.fetchall()
 
+    # Manage Job Roles 
+    cursor.execute("SELECT id, role_name, icon FROM job_roles")
+    roles = cursor.fetchall()
+
     conn.close()
 
     return render_template(
@@ -309,7 +418,8 @@ def admin_dashboard():
     total_assessments=total_assessments,
     assessments=all_assessments,
     readiness_data=readiness_data,
-    role_data=role_data
+    role_data=role_data,
+    roles=roles
     )
 
 
@@ -396,13 +506,19 @@ def use_previous_skills_result():
 
     recommendations = generate_recommendations(gap_details)
 
+    paths = generate_career_paths(job_role, gap_details)
+
+    role_suggestions = recommend_roles(user_skills)
+
     return render_template(
         'result.html',
         job_role=job_role,
         total_gap=total_gap,
         readiness=readiness,
         gap_details=gap_details,
-        recommendations=recommendations
+        recommendations=recommendations,
+        career_paths=paths,
+        role_suggestions=role_suggestions
     )
 
 @app.route('/save_skill_profile', methods=['POST'])
@@ -431,17 +547,142 @@ def save_skill_profile():
 
     return {"status":"success"}
 
+@app.route('/edit_skills')
+def edit_skills():
+
+    conn = sqlite3.connect("hiremind.db")
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT skill_name, skill_level
+        FROM user_profile_skills
+        WHERE user_id = ?
+    """, (session['user_id'],))
+
+    rows = cursor.fetchall()
+    conn.close()
+
+    skills = {row[0]: row[1] for row in rows}
+
+    return render_template("edit_skills.html", skills=skills)
+
+@app.route('/assessment/<int:assessment_id>')
+def view_assessment(assessment_id):
+
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+
+    conn = sqlite3.connect("hiremind.db")
+    cursor = conn.cursor()
+
+    # Get assessment info
+    cursor.execute("""
+        SELECT job_role, total_gap, readiness
+        FROM assessments
+        WHERE id = ? AND user_id = ?
+    """, (assessment_id, session['user_id']))
+
+    assessment = cursor.fetchone()
+
+    if not assessment:
+        conn.close()
+        return "Assessment not found"
+
+    job_role, total_gap, readiness = assessment
+
+    # Get skills
+    cursor.execute("""
+        SELECT skill_name, user_level
+        FROM user_skills
+        WHERE assessment_id = ?
+    """, (assessment_id,))
+
+    rows = cursor.fetchall()
+    conn.close()
+
+    user_skills = {row[0]: row[1] for row in rows}
+
+    job_requirements = get_job_requirements(job_role)
+
+    total_gap, gap_details, extra_features = calculate_skill_gap(
+        user_skills,
+        job_requirements
+    )
+
+    recommendations = generate_recommendations(gap_details)
+
+    paths = generate_career_paths(job_role, gap_details)
+
+    role_suggestions = recommend_roles(user_skills)
+
+    return render_template(
+        "result.html",
+        job_role=job_role,
+        total_gap=total_gap,
+        readiness=readiness,
+        gap_details=gap_details,
+        recommendations=recommendations,
+        career_paths=paths,
+        role_suggestions=role_suggestions
+    )
+
+@app.route('/add_role', methods=['POST'])
+def add_role():
+
+    role = request.form['role']
+    icon = request.form['icon']
+
+    conn = sqlite3.connect("hiremind.db")
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        INSERT INTO job_roles (role_name, icon)
+        VALUES (?, ?)
+    """, (role, icon))
+
+    conn.commit()
+    conn.close()
+
+    return redirect('/admin')
+
+@app.route('/edit_role/<int:role_id>', methods=['POST'])
+def edit_role(role_id):
+
+    role = request.form['role']
+    icon = request.form['icon']
+
+    conn = sqlite3.connect("hiremind.db")
+    cursor = conn.cursor()
+
+    cursor.execute("""
+    UPDATE job_roles
+    SET role_name = ?, icon = ?
+    WHERE id = ?
+    """, (role, icon, role_id))
+
+    conn.commit()
+    conn.close()
+
+    return redirect('/admin')
 
 # ---------------- LOGIC ----------------
 
 def get_job_requirements(role):
-    req = {}
-    with open('data/job_roles.csv', newline='') as f:
-        reader = csv.DictReader(f)
-        for row in reader:
-            if row['job_role'] == role:
-                req[row['skill']] = int(row['weight'])
-    return req
+
+    conn = sqlite3.connect("hiremind.db")
+    cursor = conn.cursor()
+
+    cursor.execute("""
+    SELECT js.skill_name, js.weight
+    FROM job_roles jr
+    JOIN job_skills js ON jr.id = js.role_id
+    WHERE jr.role_name = ?
+    """, (role,))
+
+    rows = cursor.fetchall()
+    conn.close()
+
+    return {row[0]: row[1] for row in rows}
 
 def calculate_skill_gap(user_skills, job_requirements):
     REQUIRED_LEVEL = 3
@@ -481,7 +722,8 @@ def calculate_skill_gap(user_skills, job_requirements):
             "user_level": user_level,
             "required_level": REQUIRED_LEVEL,
             "weight": weight,
-            "status": status
+            "status": status,
+            "critical": True if weight >= 4 and user_level < 2 else False
         })
 
 
@@ -508,8 +750,107 @@ def generate_recommendations(gap_details):
             recs.append({"skill": d['skill'], "priority": priority})
     return sorted(recs, key=lambda x: x['priority'], reverse=True)
 
+def recommend_roles(user_skills):
+
+    roles = []
+
+    with open('data/job_roles.csv', newline='') as f:
+        reader = csv.DictReader(f)
+
+        job_requirements = {}
+
+        for row in reader:
+            role = row['job_role']
+            skill = row['skill']
+            weight = int(row['weight'])
+
+            if role not in job_requirements:
+                job_requirements[role] = {}
+
+            job_requirements[role][skill] = weight
+
+    for role, req in job_requirements.items():
+
+        total_gap, _, _ = calculate_skill_gap(user_skills, req)
+
+        roles.append({
+            "role": role,
+            "gap": total_gap
+        })
+
+    roles.sort(key=lambda x: x["gap"])
+
+    return roles[:3]
+
+def generate_career_paths(job_role, gap_details):
+
+    paths = career_paths.get(job_role, [])
+
+    results = []
+
+    for role in paths:
+
+        missing_skills = []
+
+        for skill in gap_details:
+
+            if skill["status"] != "Strong":
+                missing_skills.append(skill["skill"])
+
+        if missing_skills:
+            results.append({
+                "role": role,
+                "improve": ", ".join(missing_skills[:2])
+            })
+        else:
+            results.append({
+                "role": role,
+                "improve": "You already meet most requirements"
+            })
+
+    return results
+
+def load_roles_from_csv():
+
+    conn = sqlite3.connect("hiremind.db")
+    cursor = conn.cursor()
+
+    with open('data/job_roles.csv', newline='') as f:
+        reader = csv.DictReader(f)
+
+        role_map = {}
+
+        for row in reader:
+            role = row['job_role']
+            skill = row['skill']
+            weight = int(row['weight'])
+
+            if role not in role_map:
+                cursor.execute(
+                    "INSERT OR IGNORE INTO job_roles (role_name) VALUES (?)",
+                    (role,)
+                )
+
+                cursor.execute(
+                    "SELECT id FROM job_roles WHERE role_name=?",
+                    (role,)
+                )
+                role_id = cursor.fetchone()[0]
+                role_map[role] = role_id
+
+            role_id = role_map[role]
+
+            cursor.execute("""
+            INSERT INTO job_skills (role_id, skill_name, weight)
+            VALUES (?, ?, ?)
+            """, (role_id, skill, weight))
+
+    conn.commit()
+    conn.close()
+
 # ---------------- RUN ----------------
 
 if __name__ == '__main__':
     init_db()
+    load_roles_from_csv()   # run once then remove later
     app.run(debug=True)

@@ -18,6 +18,12 @@
             </div>
         </div>
 
+        <button onclick="window.location.href='/edit_skills'" class="btn-secondary">
+
+        Edit Skill Profile
+
+        </button>
+
         <div class="content-header">
             <h2>My Assessment History</h2>
             <p class="subtitle">Track your progress and skill development over time</p>
@@ -44,7 +50,7 @@
                     </thead>
                     <tbody>
                         {% for a in assessments %}
-                        <tr>
+                        <tr onclick="window.location.href='/assessment/{{ a[0] }}'" style="cursor:pointer;">
                             <td><strong>{{ a[1] }}</strong></td>
                             <td><span class="level-badge level-2">{{ a[2] }}</span></td>
                             <td>

@@ -96,6 +96,80 @@
         </div>
     </div>
 
+    <!-- Admin Add Roles -->
+
+    <div class="section">
+
+    <h3 class="section-title">Add New Job Role</h3>
+
+    <form action="/add_role" method="post">
+
+    <input 
+    type="text" 
+    name="role" 
+    placeholder="Enter role name" 
+    required
+    style="padding:10px; margin-right:10px;"
+    >
+
+    <input 
+    type="text" 
+    name="icon" 
+    placeholder="Enter icon (e.g. 💻 🤖 📊)" 
+    required
+    style="padding:10px; margin-right:10px;"
+    >
+
+    <button type="submit" class="btn-primary">
+    Add Role
+    </button>
+
+    </form>
+
+    </div>
+
+    <!-- Manage Job Roles -->
+
+    <div class="section">
+
+    <h3 class="section-title">Manage Job Roles</h3>
+
+    <table class="modern-table">
+
+    <tr>
+    <th>Role</th>
+    <th>Icon</th>
+    <th>Update</th>
+    </tr>
+
+    {% for role in roles %}
+
+    <tr>
+
+    <form method="post" action="/edit_role/{{ role[0] }}">
+
+    <td>
+    <input type="text" name="role" value="{{ role[1] }}">
+    </td>
+
+    <td>
+    <input type="text" name="icon" value="{{ role[2] }}">
+    </td>
+
+    <td>
+    <button type="submit" class="btn-secondary">Update</button>
+    </td>
+
+    </form>
+
+    </tr>
+
+    {% endfor %}
+
+    </table>
+
+    </div>
+
     <!-- Charts Section -->
     <div class="charts-grid">
         <div class="chart-card">

@@ -31,113 +31,26 @@
 
     <form action="/skills" method="post">
         <div class="job-roles-grid">
-            <div class="job-role-card">
-                <input type="radio" name="job_role" id="web_dev" value="Web Developer" required>
-                <label for="web_dev">
-                    <div class="icon">🌐</div>
-                    <div class="role-name">Web Developer</div>
-                    <div class="role-desc">Build responsive websites</div>
-                </label>
-            </div>
+            {% for role, icon in roles %}
 
             <div class="job-role-card">
-                <input type="radio" name="job_role" id="frontend" value="Frontend Developer">
-                <label for="frontend">
-                    <div class="icon">🎨</div>
-                    <div class="role-name">Frontend Developer</div>
-                    <div class="role-desc">Create user interfaces</div>
+
+                <input 
+                    type="radio" 
+                    name="job_role" 
+                    id="role_{{ loop.index }}" 
+                    value="{{ role }}" 
+                    required
+                >
+
+                <label for="role_{{ loop.index }}">
+                    <div class="icon">{{ icon }}</div>
+                    <div class="role-name">{{ role }}</div>
                 </label>
+
             </div>
 
-            <div class="job-role-card">
-                <input type="radio" name="job_role" id="backend" value="Backend Developer">
-                <label for="backend">
-                    <div class="icon">⚙️</div>
-                    <div class="role-name">Backend Developer</div>
-                    <div class="role-desc">Develop server-side logic</div>
-                </label>
-            </div>
-
-            <div class="job-role-card">
-                <input type="radio" name="job_role" id="software" value="Software Developer">
-                <label for="software">
-                    <div class="icon">💻</div>
-                    <div class="role-name">Software Developer</div>
-                    <div class="role-desc">Build software solutions</div>
-                </label>
-            </div>
-
-            <div class="job-role-card">
-                <input type="radio" name="job_role" id="fullstack" value="Full Stack Developer">
-                <label for="fullstack">
-                    <div class="icon">🔧</div>
-                    <div class="role-name">Full Stack Developer</div>
-                    <div class="role-desc">End-to-end development</div>
-                </label>
-            </div>
-
-            <div class="job-role-card">
-                <input type="radio" name="job_role" id="qa" value="QA Engineer">
-                <label for="qa">
-                    <div class="icon">✅</div>
-                    <div class="role-name">QA Engineer</div>
-                    <div class="role-desc">Ensure quality assurance</div>
-                </label>
-            </div>
-
-            <div class="job-role-card">
-                <input type="radio" name="job_role" id="support" value="Technical Support Engineer">
-                <label for="support">
-                    <div class="icon">🛠️</div>
-                    <div class="role-name">Technical Support</div>
-                    <div class="role-desc">Provide tech assistance</div>
-                </label>
-            </div>
-
-            <div class="job-role-card">
-                <input type="radio" name="job_role" id="devops" value="DevOps Engineer">
-                <label for="devops">
-                    <div class="icon">🚀</div>
-                    <div class="role-name">DevOps Engineer</div>
-                    <div class="role-desc">Automate & deploy</div>
-                </label>
-            </div>
-
-            <div class="job-role-card">
-                <input type="radio" name="job_role" id="ba" value="Business Analyst">
-                <label for="ba">
-                    <div class="icon">📊</div>
-                    <div class="role-name">Business Analyst</div>
-                    <div class="role-desc">Bridge tech & business</div>
-                </label>
-            </div>
-
-            <div class="job-role-card">
-                <input type="radio" name="job_role" id="data_analyst" value="Data Analyst">
-                <label for="data_analyst">
-                    <div class="icon">📈</div>
-                    <div class="role-name">Data Analyst</div>
-                    <div class="role-desc">Analyze data insights</div>
-                </label>
-            </div>
-
-            <div class="job-role-card">
-                <input type="radio" name="job_role" id="data_scientist" value="Data Scientist">
-                <label for="data_scientist">
-                    <div class="icon">🔬</div>
-                    <div class="role-name">Data Scientist</div>
-                    <div class="role-desc">Extract data patterns</div>
-                </label>
-            </div>
-
-            <div class="job-role-card">
-                <input type="radio" name="job_role" id="ai" value="AI Engineer">
-                <label for="ai">
-                    <div class="icon">🤖</div>
-                    <div class="role-name">AI Engineer</div>
-                    <div class="role-desc">Build AI systems</div>
-                </label>
-            </div>
+            {% endfor %}
         </div>
 
         <div class="button-container">

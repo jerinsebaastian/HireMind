@@ -85,6 +85,7 @@
                         <th>Required</th>
                         <th>Importance</th>
                         <th>Status</th>
+                        <th>Alert</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -122,6 +123,30 @@
                                 {% endif %}
                                 {{ row.status }}
                             </span>
+                        </td>
+                        <td>
+
+                            {% if row.critical %}
+
+                            <span style="
+                            background:#fee2e2;
+                            color:#991b1b;
+                            padding:6px 12px;
+                            border-radius:20px;
+                            font-size:12px;
+                            font-weight:600;
+                            ">
+
+                            ⚠ Critical Skill
+
+                            </span>
+
+                            {% else %}
+
+                            <span style="color:#64748b;">—</span>
+
+                            {% endif %}
+
                         </td>
                     </tr>
                     {% endfor %}
@@ -169,12 +194,94 @@
         </div>
         {% endif %}
     </div>
+    
+    <!-- Career Path Recommendations -->
+    <div class="section">
+
+    <h3 class="section-title">
+
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M13 2v8h8v4h-8v8h-4v-8H1v-4h8V2z"/>
+    </svg>
+
+    Career Path Recommendations
+
+    </h3>
+
+    {% if career_paths is defined and career_paths %}
+
+    <div class="recommendations-grid">
+
+    {% for role in career_paths %}
+
+    <div class="recommendation-card">
+
+    <div class="rec-content">
+
+    <h4>{{ role.role }}</h4>
+
+    <p style="color:#64748b;font-size:14px;">
+    Improve skills: {{ role.improve }}
+    </p>
+
+    </div>
+
+    </div>
+
+    {% endfor %}
+
+    </div>
+
+    {% else %}
+
+    <p>No career path suggestions available.</p>
+
+    {% endif %}
+
+    </div>
+
+    <div class="section">
+
+    <h3 class="section-title">
+
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M12 2l4 8 8 4-8 4-4 8-4-8-8-4 8-4z"/>
+    </svg>
+
+    AI Role Recommendations
+
+    </h3>
+
+    <div class="recommendations-grid">
+
+    {% for r in role_suggestions %}
+
+    <div class="recommendation-card">
+
+    <div class="rec-content">
+
+    <h4>{{ r.role }}</h4>
+
+    <p style="color:#64748b;font-size:14px;">
+    Skill gap score: {{ r.gap }}
+    </p>
+
+    </div>
+
+    </div>
+
+    {% endfor %}
+
+    </div>
+
+    </div>
 
     <div class="button-container">
         <button onclick="window.location.href='/'" class="btn-secondary">
             Start New Assessment
         </button>
     </div>
+
 </div>
 
 <script>
