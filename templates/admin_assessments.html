@@ -1,0 +1,73 @@
+{% extends "admin_base.html" %}
+{% block content %}
+
+<h2>Assessments</h2>
+
+<form method="get">
+    <input type="text" name="search" placeholder="Search" value="{{ request.args.get('search','') }}">
+    
+    <select name="readiness">
+        <option value="">All</option>
+        <option {% if request.args.get('readiness')=='Job Ready' %}selected{% endif %}>Job Ready</option>
+        <option {% if request.args.get('readiness')=='Almost Ready' %}selected{% endif %}>Almost Ready</option>
+        <option {% if request.args.get('readiness')=='Not Ready' %}selected{% endif %}>Not Ready</option>
+    </select>
+
+    <button type="submit">Filter</button>
+</form>
+
+<table class="modern-table">
+<tr><th>User</th><th>Role</th><th>Status</th><th>Date</th></tr>
+
+{% for r in data %}
+<tr>
+<td>{{ r[0] }}</td>
+<td>{{ r[1] }}</td>
+<td>{{ r[2] }}</td>
+<td>{{ r[3] }}</td>
+</tr>
+{% endfor %}
+
+</table>
+
+<!-- ✅ PAGINATION -->
+<div style="margin-top:20px;">
+
+{% set page = request.args.get('page',1)|int %}
+
+<!-- 🚫 PREV BUTTON -->
+{% if page > 1 %}
+<a href="?page={{ page-1 }}&search={{ request.args.get('search','') }}&readiness={{ request.args.get('readiness','') }}">
+    ⬅ Prev
+</a>
+{% else %}
+<span style="color:gray;">⬅ Prev</span>
+{% endif %}
+
+&nbsp;&nbsp;
+
+<!-- 🔢 PAGE NUMBERS -->
+{% for p in range(1, total_pages + 1) %}
+    {% if p == page %}
+        <strong>{{ p }}</strong>
+    {% else %}
+        <a href="?page={{ p }}&search={{ request.args.get('search','') }}&readiness={{ request.args.get('readiness','') }}">
+            {{ p }}
+        </a>
+    {% endif %}
+{% endfor %}
+
+&nbsp;&nbsp;
+
+<!-- NEXT BUTTON -->
+{% if page < total_pages %}
+<a href="?page={{ page+1 }}&search={{ request.args.get('search','') }}&readiness={{ request.args.get('readiness','') }}">
+    Next ➡
+</a>
+{% else %}
+<span style="color:gray;">Next ➡</span>
+{% endif %}
+
+</div>
+
+{% endblock %}

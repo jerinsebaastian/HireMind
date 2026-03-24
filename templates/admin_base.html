@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin Panel</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+    body {
+        margin: 0;
+        font-family: 'Segoe UI', sans-serif;
+    }
+
+    .admin-container {
+        display: flex;
+    }
+
+    .sidebar {
+        width: 240px;
+        background: #0f172a;
+        color: white;
+        height: 100vh;
+        padding: 20px;
+    }
+
+    .sidebar h2 {
+        margin-bottom: 30px;
+    }
+
+    .sidebar a {
+        display: block;
+        padding: 10px;
+        margin: 10px 0;
+        border-radius: 8px;
+        text-decoration: none;
+        color: #cbd5f5;
+    }
+
+    .sidebar a:hover {
+        background: #1e293b;
+        color: white;
+    }
+
+    .content {
+        flex: 1;
+        padding: 30px;
+        background: #f8fafc;
+    }
+
+    .card {
+        background: white;
+        padding: 20px;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+    </style>
+</head>
+<body>
+
+<div class="admin-container">
+
+    <div class="sidebar">
+        <h2>Admin</h2>
+
+        <a href="/admin/dashboard">Dashboard</a>
+        <a href="/admin/assessments">Assessments</a>
+        <a href="/admin/job_roles">Job Roles</a>
+        <a href="/admin/analytics">Analytics</a>
+        <a href="/logout">Logout</a>
+    </div>
+
+    <div class="content">
+        {% block content %}{% endblock %}
+    </div>
+
+</div>
+
+</body>
+</html>

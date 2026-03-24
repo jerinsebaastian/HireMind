@@ -1,0 +1,79 @@
+{% extends "admin_base.html" %}
+{% block content %}
+
+<h2>Job Roles</h2>
+
+<h3>Add Role</h3>
+
+<form method="post" action="/add_role">
+    <input name="role" placeholder="Role" required>
+    <input name="icon" placeholder="Icon" required>
+    <input name="skill" placeholder="Skill" required>
+    <input name="weight" type="number" max="5" required>
+    <button>Add</button>
+</form>
+
+<h3>Manage Roles</h3>
+
+<table class="modern-table">
+
+<tr>
+<th>Role</th><th>Icon</th><th>Skills</th><th>Action</th>
+</tr>
+
+{% for r in roles %}
+<tr>
+<td>{{ r[1] }}</td>
+<td>{{ r[2] }}</td>
+<td colspan="2">{{ r[3] }}</td>
+
+<td>
+    <!-- ✅ EDIT BUTTON -->
+    <button onclick="openEdit('{{ r[0] }}','{{ r[1] }}','{{ r[2] }}')">
+        Edit
+    </button>
+
+    <!-- ✅ DELETE BUTTON -->
+    <form method="post" action="/delete_role/{{ r[0] }}" onsubmit="return confirm('Are you sure?')">
+        <button>Delete</button>
+    </form>
+</td>
+
+</tr>
+{% endfor %}
+
+</table>
+
+<!-- ✅ EDIT POPUP MODAL -->
+<div id="editModal" style="display:none; position:fixed; top:30%; left:40%; background:white; padding:20px; border-radius:10px; box-shadow:0px 0px 10px rgba(0,0,0,0.3);">
+
+<form method="post" action="/edit_role">
+
+<input type="hidden" name="id" id="edit_id">
+
+<input type="text" name="role" id="edit_role" placeholder="Role">
+<input type="text" name="icon" id="edit_icon" placeholder="Icon">
+
+<br><br>
+<button type="submit">Save</button>
+<button type="button" onclick="closeEdit()">Cancel</button>
+
+</form>
+
+</div>
+
+<!-- ✅ JAVASCRIPT -->
+<script>
+function openEdit(id, role, icon){
+    document.getElementById("editModal").style.display = "block";
+    document.getElementById("edit_id").value = id;
+    document.getElementById("edit_role").value = role;
+    document.getElementById("edit_icon").value = icon;
+}
+
+function closeEdit(){
+    document.getElementById("editModal").style.display = "none";
+}
+</script>
+
+{% endblock %}

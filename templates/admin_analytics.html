@@ -1,0 +1,29 @@
+{% extends "admin_base.html" %}
+{% block content %}
+
+<h2>Analytics</h2>
+
+<canvas id="chart1"></canvas>
+<canvas id="chart2"></canvas>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+new Chart(document.getElementById('chart1'), {
+    type: 'pie',
+    data: {
+        labels: {{ readiness | map(attribute=0) | list | tojson }},
+        datasets: [{ data: {{ readiness | map(attribute=1) | list | tojson }} }]
+    }
+});
+
+new Chart(document.getElementById('chart2'), {
+    type: 'bar',
+    data: {
+        labels: {{ roles | map(attribute=0) | list | tojson }},
+        datasets: [{ data: {{ roles | map(attribute=1) | list | tojson }} }]
+    }
+});
+</script>
+
+{% endblock %}

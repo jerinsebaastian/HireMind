@@ -9,6 +9,14 @@ from werkzeug.security import generate_password_hash, check_password_hash
 app = Flask(__name__)
 app.secret_key = "supersecretkey"
 
+
+# ---------------- HELPER FUNCTIONS ----------------
+
+def admin_required():
+    if 'user_id' not in session or not session.get('is_admin'):
+        return False
+    return True
+
 # ---------------- DATABASE SETUP ----------------
 
 def init_db():
@@ -96,78 +104,6 @@ def init_db():
 # Load ML model
 model = joblib.load("ml/readiness_model.pkl")
 encoder = joblib.load("ml/label_encoder.pkl")
-
-# ----------------career paths----------------
-
-career_paths = {
-
-"Frontend Developer": [
-"Full Stack Developer",
-"UI Engineer",
-"Web Architect"
-],
-
-"Backend Developer": [
-"Full Stack Developer",
-"DevOps Engineer",
-"Software Architect"
-],
-
-"Web Developer": [
-"Frontend Developer",
-"Backend Developer",
-"Full Stack Developer"
-],
-
-"Software Developer": [
-"Software Architect",
-"Tech Lead",
-"Engineering Manager"
-],
-
-"Data Analyst": [
-"Data Scientist",
-"Business Intelligence Engineer",
-"Data Engineer"
-],
-
-"Data Scientist": [
-"AI Engineer",
-"ML Engineer",
-"AI Researcher"
-],
-
-"AI Engineer": [
-"ML Architect",
-"AI Research Scientist",
-"AI Product Lead"
-],
-
-"DevOps Engineer": [
-"Cloud Engineer",
-"Site Reliability Engineer",
-"Platform Engineer"
-],
-
-"QA Engineer": [
-"Automation Engineer",
-"Test Architect",
-"QA Lead"
-],
-
-"Technical Support Engineer": [
-"System Administrator",
-"DevOps Engineer",
-"Cloud Support Engineer"
-],
-
-"Business Analyst": [
-"Product Manager",
-"Data Analyst",
-"Strategy Consultant"
-]
-
-}
 
 # ---------------- ROUTES ----------------
 
@@ -278,8 +214,6 @@ def analyze():
 
     conn.commit()
     conn.close()
-
-    paths = generate_career_paths(job_role, gap_details)
     
     return render_template(
         'result.html',
@@ -288,7 +222,6 @@ def analyze():
         readiness=readiness,
         gap_details=gap_details,
         recommendations=recommendations,
-        career_paths=paths,
         role_suggestions=role_suggestions
     )
 
@@ -340,6 +273,7 @@ def login():
         if user and check_password_hash(user[1], password):
             session['user_id'] = user[0]
             session['role'] = user[2]
+            session['is_admin'] = True if user[2] == 'admin' else False
 
             # Fetch user name
             conn = sqlite3.connect("hiremind.db")
@@ -365,63 +299,8 @@ def logout():
     return redirect(url_for('login'))
 
 @app.route('/admin')
-def admin_dashboard():
-    if 'user_id' not in session or session.get('role') != 'admin':
-        return redirect(url_for('login'))
-
-    conn = sqlite3.connect("hiremind.db")
-    cursor = conn.cursor()
-
-    # Get total users
-    cursor.execute("SELECT COUNT(*) FROM users WHERE role = 'user'")
-    total_users = cursor.fetchone()[0]
-
-    # Get total assessments
-    cursor.execute("SELECT COUNT(*) FROM assessments")
-    total_assessments = cursor.fetchone()[0]
-
-    # Get all assessments
-    cursor.execute("""
-        SELECT users.name, assessments.job_role, assessments.total_gap,
-               assessments.readiness, assessments.created_at
-        FROM assessments
-        JOIN users ON assessments.user_id = users.id
-        ORDER BY assessments.created_at DESC
-    """)
-    all_assessments = cursor.fetchall()
-
-        # Readiness distribution
-    cursor.execute("""
-        SELECT readiness, COUNT(*)
-        FROM assessments
-        GROUP BY readiness
-    """)
-    readiness_data = cursor.fetchall()
-
-    # Job role distribution
-    cursor.execute("""
-        SELECT job_role, COUNT(*)
-        FROM assessments
-        GROUP BY job_role
-    """)
-    role_data = cursor.fetchall()
-
-    # Manage Job Roles 
-    cursor.execute("SELECT id, role_name, icon FROM job_roles")
-    roles = cursor.fetchall()
-
-    conn.close()
-
-    return render_template(
-    'admin_dashboard.html',
-    total_users=total_users,
-    total_assessments=total_assessments,
-    assessments=all_assessments,
-    readiness_data=readiness_data,
-    role_data=role_data,
-    roles=roles
-    )
-
+def admin_home():
+    return redirect('/admin/dashboard')
 
 @app.route('/dashboard')
 def dashboard():
@@ -506,8 +385,6 @@ def use_previous_skills_result():
 
     recommendations = generate_recommendations(gap_details)
 
-    paths = generate_career_paths(job_role, gap_details)
-
     role_suggestions = recommend_roles(user_skills)
 
     return render_template(
@@ -517,7 +394,6 @@ def use_previous_skills_result():
         readiness=readiness,
         gap_details=gap_details,
         recommendations=recommendations,
-        career_paths=paths,
         role_suggestions=role_suggestions
     )
 
@@ -611,8 +487,6 @@ def view_assessment(assessment_id):
 
     recommendations = generate_recommendations(gap_details)
 
-    paths = generate_career_paths(job_role, gap_details)
-
     role_suggestions = recommend_roles(user_skills)
 
     return render_template(
@@ -622,7 +496,6 @@ def view_assessment(assessment_id):
         readiness=readiness,
         gap_details=gap_details,
         recommendations=recommendations,
-        career_paths=paths,
         role_suggestions=role_suggestions
     )
 
@@ -645,9 +518,13 @@ def add_role():
 
     return redirect('/admin')
 
-@app.route('/edit_role/<int:role_id>', methods=['POST'])
-def edit_role(role_id):
+@app.route('/edit_role', methods=['POST'])
+def edit_role():
 
+    if not admin_required():
+        return redirect(url_for('login'))
+
+    role_id = request.form['id']
     role = request.form['role']
     icon = request.form['icon']
 
@@ -655,15 +532,176 @@ def edit_role(role_id):
     cursor = conn.cursor()
 
     cursor.execute("""
-    UPDATE job_roles
-    SET role_name = ?, icon = ?
-    WHERE id = ?
+    UPDATE job_roles SET role_name=?, icon=? WHERE id=?
     """, (role, icon, role_id))
 
     conn.commit()
     conn.close()
 
-    return redirect('/admin')
+    return redirect('/admin/job_roles')
+
+@app.route('/admin/dashboard')
+def admin_dashboard():
+
+    if not admin_required():
+        return redirect(url_for('login'))
+
+    conn = sqlite3.connect("hiremind.db")
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT COUNT(*) FROM users WHERE role='user'")
+    total_users = cursor.fetchone()[0]
+
+    cursor.execute("SELECT COUNT(*) FROM assessments")
+    total_assessments = cursor.fetchone()[0]
+
+    avg = total_assessments / total_users if total_users else 0
+
+    # Last 5 assessments
+    cursor.execute("""
+        SELECT users.name, job_role, readiness, created_at
+        FROM assessments
+        JOIN users ON users.id = assessments.user_id
+        ORDER BY created_at DESC
+        LIMIT 5
+    """)
+
+    recent = cursor.fetchall()
+
+    conn.close()
+
+    return render_template("admin_dashboard.html",
+                           total_users=total_users,
+                           total_assessments=total_assessments,
+                           avg=avg,
+                           recent=recent)
+
+@app.route('/admin/assessments')
+def admin_assessments():
+
+    # 🔐 Check admin access
+    if not admin_required():
+        return redirect(url_for('login'))
+
+    # 📥 Get filter values from URL
+    search = request.args.get('search', '')
+    readiness = request.args.get('readiness', '')
+
+    # 📄 Pagination setup
+    page = max(1, int(request.args.get('page', 1)))  # prevent page < 1
+    limit = 10
+    offset = (page - 1) * limit
+
+    conn = sqlite3.connect("hiremind.db")
+    cursor = conn.cursor()
+
+    # 🧠 MAIN DATA QUERY
+    query = """
+    SELECT users.name, job_role, readiness, created_at
+    FROM assessments
+    JOIN users ON users.id = assessments.user_id
+    WHERE 1=1
+    """
+
+    params = []
+
+    # 🔍 Apply search filter (name OR role)
+    if search:
+        query += " AND (users.name LIKE ? OR job_role LIKE ?)"
+        params.extend([f"%{search}%", f"%{search}%"])
+
+    # 🎯 Apply readiness filter
+    if readiness:
+        query += " AND readiness = ?"
+        params.append(readiness)
+
+    # 📊 Add sorting + pagination
+    query += " ORDER BY created_at DESC LIMIT ? OFFSET ?"
+    params.extend([limit, offset])
+
+    # ▶ Execute main query
+    cursor.execute(query, params)
+    data = cursor.fetchall()
+
+    # 🔢 COUNT QUERY (IMPORTANT 🔥)
+    # This MUST match filters above
+    count_query = """
+    SELECT COUNT(*)
+    FROM assessments
+    JOIN users ON users.id = assessments.user_id
+    WHERE 1=1
+    """
+
+    count_params = []
+
+    # 🔍 Apply same search filter
+    if search:
+        count_query += " AND (users.name LIKE ? OR job_role LIKE ?)"
+        count_params.extend([f"%{search}%", f"%{search}%"])
+
+    # 🎯 Apply same readiness filter
+    if readiness:
+        count_query += " AND readiness = ?"
+        count_params.append(readiness)
+
+    # ▶ Execute count query
+    cursor.execute(count_query, count_params)
+    total_records = cursor.fetchone()[0]
+
+    # 📄 Calculate total pages
+    total_pages = (total_records + limit - 1) // limit
+
+    conn.close()
+
+    # 📤 Send data to HTML
+    return render_template(
+        "admin_assessments.html",
+        data=data,
+        total_pages=total_pages
+    )
+
+@app.route('/admin/job_roles')
+def admin_roles():
+
+    if not admin_required():
+        return redirect(url_for('login'))
+
+    conn = sqlite3.connect("hiremind.db")
+    cursor = conn.cursor()
+
+    cursor.execute("""
+    SELECT jr.id, jr.role_name, jr.icon,
+           GROUP_CONCAT(js.skill_name || ' (' || js.weight || ')')
+    FROM job_roles jr
+    JOIN job_skills js ON jr.id = js.role_id
+    GROUP BY jr.id
+    """)
+
+    roles = cursor.fetchall()
+    conn.close()
+
+    return render_template("admin_job_roles.html", roles=roles)
+
+@app.route('/admin/analytics')
+def admin_analytics():
+
+    if not admin_required():
+        return redirect(url_for('login'))
+
+    conn = sqlite3.connect("hiremind.db")
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT readiness, COUNT(*) FROM assessments GROUP BY readiness")
+    readiness = cursor.fetchall()
+
+    cursor.execute("SELECT job_role, COUNT(*) FROM assessments GROUP BY job_role")
+    roles = cursor.fetchall()
+
+    conn.close()
+
+    return render_template("admin_analytics.html",
+                           readiness=readiness,
+                           roles=roles)
 
 # ---------------- LOGIC ----------------
 
@@ -782,34 +820,6 @@ def recommend_roles(user_skills):
 
     return roles[:3]
 
-def generate_career_paths(job_role, gap_details):
-
-    paths = career_paths.get(job_role, [])
-
-    results = []
-
-    for role in paths:
-
-        missing_skills = []
-
-        for skill in gap_details:
-
-            if skill["status"] != "Strong":
-                missing_skills.append(skill["skill"])
-
-        if missing_skills:
-            results.append({
-                "role": role,
-                "improve": ", ".join(missing_skills[:2])
-            })
-        else:
-            results.append({
-                "role": role,
-                "improve": "You already meet most requirements"
-            })
-
-    return results
-
 def load_roles_from_csv():
 
     conn = sqlite3.connect("hiremind.db")
@@ -852,5 +862,4 @@ def load_roles_from_csv():
 
 if __name__ == '__main__':
     init_db()
-    load_roles_from_csv()   # run once then remove later
     app.run(debug=True)
