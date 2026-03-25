@@ -157,7 +157,7 @@ function createSkillRow(skill="", weight=""){
     return `
     <div class="skill-row">
         <input name="skill[]" value="${skill}" placeholder="Skill" required>
-        <input name="weight[]" type="number" value="${weight}" max="5" required>
+        <input name="weight[]" type="number" value="${weight}" max="5" min="1" required>
 
         <button type="button" onclick="removeSkill(this)">❌</button>
     </div>

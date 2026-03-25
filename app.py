@@ -116,9 +116,15 @@ encoder = joblib.load("ml/label_encoder.pkl")
 @app.route('/')
 def select_role():
 
+    # If not logged in → go to login
     if 'user_id' not in session:
         return redirect(url_for('login'))
 
+    # If admin (user_id == 1) → redirect to admin dashboard
+    if session['user_id'] == 1:
+        return redirect(url_for('admin_dashboard'))
+
+    # Normal users → continue as usual
     conn = sqlite3.connect("hiremind.db", timeout=10)
     cursor = conn.cursor()
 
@@ -352,7 +358,7 @@ def use_previous_skills_result():
 
     job_role = request.args.get('job_role')
 
-    conn = sqlite3.connect("hiremind.db", timeout=10)
+    conn = sqlite3.connect("hiremind.db")
     cursor = conn.cursor()
 
     cursor.execute("""
@@ -367,7 +373,6 @@ def use_previous_skills_result():
     """, (session['user_id'],))
 
     rows = cursor.fetchall()
-    conn.close()
 
     user_skills = {row[0]: row[1] for row in rows}
 
@@ -388,10 +393,26 @@ def use_previous_skills_result():
     ]]
 
     readiness = predict_readiness_ml(features)
-
     recommendations = generate_recommendations(gap_details)
 
-    role_suggestions = recommend_roles(user_skills)
+    # ✅ SAVE THIS ASSESSMENT
+    created_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    cursor.execute("""
+        INSERT INTO assessments (user_id, job_role, total_gap, readiness, created_at)
+        VALUES (?, ?, ?, ?, ?)
+    """, (session['user_id'], job_role, total_gap, readiness, created_at))
+
+    assessment_id = cursor.lastrowid
+
+    for skill, level in user_skills.items():
+        cursor.execute("""
+            INSERT INTO user_skills (assessment_id, skill_name, user_level)
+            VALUES (?, ?, ?)
+        """, (assessment_id, skill, level))
+
+    conn.commit()
+    conn.close()
 
     return render_template(
         'result.html',
@@ -399,8 +420,7 @@ def use_previous_skills_result():
         total_gap=total_gap,
         readiness=readiness,
         gap_details=gap_details,
-        recommendations=recommendations,
-        role_suggestions=role_suggestions
+        recommendations=recommendations
     )
 
 @app.route('/save_skill_profile', methods=['POST'])
@@ -554,28 +574,30 @@ def edit_role():
     role_id = request.form['id']
     role = request.form['role']
     icon = request.form['icon']
+
     skills = request.form.getlist('skill[]')
     weights = request.form.getlist('weight[]')
 
-    conn = sqlite3.connect("hiremind.db")
+    conn = sqlite3.connect("hiremind.db", timeout=10)
     cursor = conn.cursor()
 
-    # update role
+    # ✅ Update role name + icon
     cursor.execute("""
-        UPDATE job_roles
-        SET role_name=?, icon=?
-        WHERE id=?
+        UPDATE job_roles SET role_name=?, icon=? WHERE id=?
     """, (role, icon, role_id))
 
-    # delete old skills
-    cursor.execute("DELETE FROM job_skills WHERE role_id=?", (role_id,))
+    # ✅ DELETE OLD SKILLS
+    cursor.execute("""
+        DELETE FROM job_skills WHERE role_id=?
+    """, (role_id,))
 
-    # insert new skills
-    for s, w in zip(skills, weights):
-        cursor.execute("""
-            INSERT INTO job_skills (role_id, skill_name, weight)
-            VALUES (?, ?, ?)
-        """, (role_id, s, int(w)))
+    # ✅ INSERT NEW SKILLS
+    for skill, weight in zip(skills, weights):
+        if skill.strip():
+            cursor.execute("""
+                INSERT INTO job_skills (role_id, skill_name, weight)
+                VALUES (?, ?, ?)
+            """, (role_id, skill, int(weight)))
 
     conn.commit()
     conn.close()

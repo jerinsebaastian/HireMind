@@ -872,3 +872,22 @@ button, .btn-primary, .btn-secondary {
     font-size: 11px;
     margin-left: 6px;
 }
+
+.analytics-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.chart-card {
+    background: #ffffff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.chart-description {
+    font-size: 14px;
+    color: #555;
+    margin-bottom: 15px;
+}
