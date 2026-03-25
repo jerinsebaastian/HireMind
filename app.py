@@ -21,84 +21,90 @@ def admin_required():
 
 def init_db():
     conn = sqlite3.connect("hiremind.db")
-    cursor = conn.cursor()
 
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT,
-            email TEXT UNIQUE,
-            password_hash TEXT,
-            role TEXT DEFAULT 'user'
-        )
-    """)
+    try:
+        cursor = conn.cursor()
 
-
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS assessments (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id INTEGER,
-            job_role TEXT,
-            total_gap INTEGER,
-            readiness TEXT,
-            created_at TEXT,
-            FOREIGN KEY (user_id) REFERENCES users(id)
-        )
-    """)
-
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS user_skills (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            assessment_id INTEGER,
-            skill_name TEXT,
-            user_level INTEGER,
-            FOREIGN KEY (assessment_id) REFERENCES assessments(id)
-        )
-    """)
-
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS user_profile_skills (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id INTEGER,
-            skill_name TEXT,
-            skill_level INTEGER,
-            FOREIGN KEY (user_id) REFERENCES users(id)
-        )
-    """)
-
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS job_roles (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            role_name TEXT UNIQUE,
-            icon TEXT DEFAULT '💼'
-        )
-        """)
-
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS job_skills (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            role_id INTEGER,
-            skill_name TEXT,
-            weight INTEGER,
-            FOREIGN KEY (role_id) REFERENCES job_roles(id)
-        )
-        """)
-
-    # Create default admin if not exists
-    cursor.execute("SELECT * FROM users WHERE email = ?", ("admin@hiremind.com",))
-    admin_exists = cursor.fetchone()
-
-    if not admin_exists:
-        from werkzeug.security import generate_password_hash
-        admin_password = generate_password_hash("admin123")
         cursor.execute("""
-            INSERT INTO users (name, email, password_hash, role)
-            VALUES (?, ?, ?, ?)
-        """, ("Admin", "admin@hiremind.com", admin_password, "admin"))
+        CREATE TABLE IF NOT EXISTS users (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT,
+                email TEXT UNIQUE,
+                password_hash TEXT,
+                role TEXT DEFAULT 'user'
+            )
+        """)
 
 
-    conn.commit()
-    conn.close()
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS assessments (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER,
+                job_role TEXT,
+                total_gap INTEGER,
+                readiness TEXT,
+                created_at TEXT,
+                FOREIGN KEY (user_id) REFERENCES users(id)
+            )
+        """)
+
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS user_skills (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                assessment_id INTEGER,
+                skill_name TEXT,
+                user_level INTEGER,
+                FOREIGN KEY (assessment_id) REFERENCES assessments(id)
+            )
+        """)
+
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS user_profile_skills (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER,
+                skill_name TEXT,
+                skill_level INTEGER,
+                FOREIGN KEY (user_id) REFERENCES users(id)
+            )
+        """)
+
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS job_roles (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                role_name TEXT UNIQUE,
+                icon TEXT DEFAULT '💼'
+            )
+            """)
+
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS job_skills (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                role_id INTEGER,
+                skill_name TEXT,
+                weight INTEGER,
+                FOREIGN KEY (role_id) REFERENCES job_roles(id)
+            )
+            """)
+
+        # Create default admin if not exists
+        cursor.execute("SELECT * FROM users WHERE email = ?", ("admin@hiremind.com",))
+        admin_exists = cursor.fetchone()
+
+        if not admin_exists:
+            from werkzeug.security import generate_password_hash
+            admin_password = generate_password_hash("admin123")
+            cursor.execute("""
+                INSERT INTO users (name, email, password_hash, role)
+                VALUES (?, ?, ?, ?)
+            """, ("Admin", "admin@hiremind.com", admin_password, "admin"))
+
+
+        conn.commit()
+    except Exception as e:
+        print("Error initializing database:", e)
+
+    finally:
+        conn.close()
 
 
 # Load ML model
@@ -113,7 +119,7 @@ def select_role():
     if 'user_id' not in session:
         return redirect(url_for('login'))
 
-    conn = sqlite3.connect("hiremind.db")
+    conn = sqlite3.connect("hiremind.db", timeout=10)
     cursor = conn.cursor()
 
     cursor.execute("SELECT role_name, icon FROM job_roles")
@@ -128,7 +134,7 @@ def skills():
 
     job_role = request.form['job_role']
 
-    conn = sqlite3.connect("hiremind.db")
+    conn = sqlite3.connect("hiremind.db", timeout=10)
     cursor = conn.cursor()
 
     cursor.execute("""
@@ -158,7 +164,7 @@ def analyze():
         "CSS": int(request.form['CSS'])
     }
 
-    conn = sqlite3.connect("hiremind.db")
+    conn = sqlite3.connect("hiremind.db", timeout=10)
     cursor = conn.cursor()
 
     cursor.execute("""
@@ -193,7 +199,7 @@ def analyze():
     role_suggestions = recommend_roles(user_skills)
 
     # Save assessment to database
-    conn = sqlite3.connect("hiremind.db")
+    conn = sqlite3.connect("hiremind.db", timeout=10)
     cursor = conn.cursor()
 
     created_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -239,7 +245,7 @@ def register():
         hashed_password = generate_password_hash(password)
 
 
-        conn = sqlite3.connect("hiremind.db")
+        conn = sqlite3.connect("hiremind.db", timeout=10)
         cursor = conn.cursor()
 
         try:
@@ -276,7 +282,7 @@ def login():
             session['is_admin'] = True if user[2] == 'admin' else False
 
             # Fetch user name
-            conn = sqlite3.connect("hiremind.db")
+            conn = sqlite3.connect("hiremind.db", timeout=10)
             cursor = conn.cursor()
             cursor.execute("SELECT name FROM users WHERE id = ?", (user[0],))
             name = cursor.fetchone()[0]
@@ -307,7 +313,7 @@ def dashboard():
     if 'user_id' not in session:
         return redirect(url_for('login'))
 
-    conn = sqlite3.connect("hiremind.db")
+    conn = sqlite3.connect("hiremind.db", timeout=10)
     cursor = conn.cursor()
 
     cursor.execute("""
@@ -325,7 +331,7 @@ def dashboard():
 @app.route('/use_previous_skills', methods=['POST'])
 def use_previous_skills():
 
-    conn = sqlite3.connect("hiremind.db")
+    conn = sqlite3.connect("hiremind.db", timeout=10)
     cursor = conn.cursor()
 
     cursor.execute("""
@@ -346,7 +352,7 @@ def use_previous_skills_result():
 
     job_role = request.args.get('job_role')
 
-    conn = sqlite3.connect("hiremind.db")
+    conn = sqlite3.connect("hiremind.db", timeout=10)
     cursor = conn.cursor()
 
     cursor.execute("""
@@ -402,7 +408,7 @@ def save_skill_profile():
 
     data = request.json
 
-    conn = sqlite3.connect("hiremind.db")
+    conn = sqlite3.connect("hiremind.db", timeout=10)
     cursor = conn.cursor()
 
     cursor.execute("""
@@ -426,7 +432,7 @@ def save_skill_profile():
 @app.route('/edit_skills')
 def edit_skills():
 
-    conn = sqlite3.connect("hiremind.db")
+    conn = sqlite3.connect("hiremind.db", timeout=10)
     cursor = conn.cursor()
 
     cursor.execute("""
@@ -448,7 +454,7 @@ def view_assessment(assessment_id):
     if 'user_id' not in session:
         return redirect(url_for('login'))
 
-    conn = sqlite3.connect("hiremind.db")
+    conn = sqlite3.connect("hiremind.db", timeout=10)
     cursor = conn.cursor()
 
     # Get assessment info
@@ -502,21 +508,42 @@ def view_assessment(assessment_id):
 @app.route('/add_role', methods=['POST'])
 def add_role():
 
+    if not admin_required():
+        return redirect(url_for('login'))
+
     role = request.form['role']
     icon = request.form['icon']
+    skills = request.form.getlist('skill[]')
+    weights = request.form.getlist('weight[]')
 
-    conn = sqlite3.connect("hiremind.db")
+    conn = sqlite3.connect("hiremind.db", timeout=10)
     cursor = conn.cursor()
 
-    cursor.execute("""
-        INSERT INTO job_roles (role_name, icon)
-        VALUES (?, ?)
-    """, (role, icon))
+    try:
+        # Insert role (ONLY ONCE)
+        cursor.execute("""
+            INSERT INTO job_roles (role_name, icon)
+            VALUES (?, ?)
+        """, (role, icon))
 
-    conn.commit()
+        role_id = cursor.lastrowid
+
+        # Insert multiple skills
+        for skill, weight in zip(skills, weights):
+            cursor.execute("""
+                INSERT INTO job_skills (role_id, skill_name, weight)
+                VALUES (?, ?, ?)
+            """, (role_id, skill, int(weight)))
+
+        conn.commit()
+
+    except sqlite3.IntegrityError:
+        conn.close()
+        return "⚠ Role already exists!"
+
     conn.close()
 
-    return redirect('/admin')
+    return redirect('/admin/job_roles')
 
 @app.route('/edit_role', methods=['POST'])
 def edit_role():
@@ -527,13 +554,28 @@ def edit_role():
     role_id = request.form['id']
     role = request.form['role']
     icon = request.form['icon']
+    skills = request.form.getlist('skill[]')
+    weights = request.form.getlist('weight[]')
 
     conn = sqlite3.connect("hiremind.db")
     cursor = conn.cursor()
 
+    # update role
     cursor.execute("""
-    UPDATE job_roles SET role_name=?, icon=? WHERE id=?
+        UPDATE job_roles
+        SET role_name=?, icon=?
+        WHERE id=?
     """, (role, icon, role_id))
+
+    # delete old skills
+    cursor.execute("DELETE FROM job_skills WHERE role_id=?", (role_id,))
+
+    # insert new skills
+    for s, w in zip(skills, weights):
+        cursor.execute("""
+            INSERT INTO job_skills (role_id, skill_name, weight)
+            VALUES (?, ?, ?)
+        """, (role_id, s, int(w)))
 
     conn.commit()
     conn.close()
@@ -546,7 +588,7 @@ def admin_dashboard():
     if not admin_required():
         return redirect(url_for('login'))
 
-    conn = sqlite3.connect("hiremind.db")
+    conn = sqlite3.connect("hiremind.db", timeout=10)
     cursor = conn.cursor()
 
     cursor.execute("SELECT COUNT(*) FROM users WHERE role='user'")
@@ -592,7 +634,7 @@ def admin_assessments():
     limit = 10
     offset = (page - 1) * limit
 
-    conn = sqlite3.connect("hiremind.db")
+    conn = sqlite3.connect("hiremind.db", timeout=10)
     cursor = conn.cursor()
 
     # 🧠 MAIN DATA QUERY
@@ -661,26 +703,38 @@ def admin_assessments():
     )
 
 @app.route('/admin/job_roles')
-def admin_roles():
+def admin_job_roles():
 
     if not admin_required():
         return redirect(url_for('login'))
 
+    search = request.args.get('search', '')
+
     conn = sqlite3.connect("hiremind.db")
     cursor = conn.cursor()
 
-    cursor.execute("""
-    SELECT jr.id, jr.role_name, jr.icon,
-           GROUP_CONCAT(js.skill_name || ' (' || js.weight || ')')
-    FROM job_roles jr
-    JOIN job_skills js ON jr.id = js.role_id
-    GROUP BY jr.id
-    """)
+    if search:
+        cursor.execute("""
+        SELECT jr.id, jr.role_name, jr.icon,
+        GROUP_CONCAT(js.skill_name || ' (' || js.weight || ')')
+        FROM job_roles jr
+        JOIN job_skills js ON jr.id = js.role_id
+        WHERE jr.role_name LIKE ?
+        GROUP BY jr.id
+        """, ('%' + search + '%',))
+    else:
+        cursor.execute("""
+        SELECT jr.id, jr.role_name, jr.icon,
+        GROUP_CONCAT(js.skill_name || ' (' || js.weight || ')')
+        FROM job_roles jr
+        JOIN job_skills js ON jr.id = js.role_id
+        GROUP BY jr.id
+        """)
 
     roles = cursor.fetchall()
     conn.close()
 
-    return render_template("admin_job_roles.html", roles=roles)
+    return render_template("admin_job_roles.html", roles=roles, search=search)
 
 @app.route('/admin/analytics')
 def admin_analytics():
@@ -688,7 +742,7 @@ def admin_analytics():
     if not admin_required():
         return redirect(url_for('login'))
 
-    conn = sqlite3.connect("hiremind.db")
+    conn = sqlite3.connect("hiremind.db", timeout=10)
     cursor = conn.cursor()
 
     cursor.execute("SELECT readiness, COUNT(*) FROM assessments GROUP BY readiness")
@@ -703,18 +757,58 @@ def admin_analytics():
                            readiness=readiness,
                            roles=roles)
 
-# ---------------- LOGIC ----------------
+@app.route('/delete_role/<int:id>', methods=['POST'])
+def delete_role(id):
 
-def get_job_requirements(role):
+    if not admin_required():
+        return redirect(url_for('login'))
+
+    conn = sqlite3.connect("hiremind.db", timeout=10)
+    cursor = conn.cursor()
+
+    # delete skills first
+    cursor.execute("DELETE FROM job_skills WHERE role_id=?", (id,))
+
+    # delete role
+    cursor.execute("DELETE FROM job_roles WHERE id=?", (id,))
+
+    conn.commit()
+    conn.close()
+
+    return redirect('/admin/job_roles')
+
+@app.route('/get_role_skills/<int:id>')
+def get_role_skills(id):
 
     conn = sqlite3.connect("hiremind.db")
     cursor = conn.cursor()
 
     cursor.execute("""
-    SELECT js.skill_name, js.weight
-    FROM job_roles jr
-    JOIN job_skills js ON jr.id = js.role_id
-    WHERE jr.role_name = ?
+        SELECT skill_name, weight
+        FROM job_skills
+        WHERE role_id = ?
+    """, (id,))
+
+    rows = cursor.fetchall()
+    conn.close()
+
+    return [
+        {"name": r[0], "weight": r[1]}
+        for r in rows
+    ]
+
+# ---------------- LOGIC ----------------
+
+def get_job_requirements(role):
+
+    conn = sqlite3.connect("hiremind.db", timeout=10)
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT jrs.skill_name, jrs.weight
+        FROM job_roles jr
+        JOIN job_skills jrs ON jr.id = jrs.role_id
+        WHERE jr.role_name = ?
     """, (role,))
 
     rows = cursor.fetchall()
@@ -822,7 +916,7 @@ def recommend_roles(user_skills):
 
 def load_roles_from_csv():
 
-    conn = sqlite3.connect("hiremind.db")
+    conn = sqlite3.connect("hiremind.db", timeout=10)
     cursor = conn.cursor()
 
     with open('data/job_roles.csv', newline='') as f:
