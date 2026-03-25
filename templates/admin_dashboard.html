@@ -3,28 +3,56 @@
 
 <h2>Dashboard</h2>
 
+<!-- Stat cards -->
 <div class="results-summary">
-    <div class="card">Users: {{ total_users }}</div>
-    <div class="card">Assessments: {{ total_assessments }}</div>
-    <div class="card">Average User Assessments: {{ "%.1f"|format(avg) }}</div>
+    <div class="card">
+        <div style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;">Total Users</div>
+        <strong>{{ total_users }}</strong>
+    </div>
+    <div class="card">
+        <div style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;">Assessments</div>
+        <strong>{{ total_assessments }}</strong>
+    </div>
+    <div class="card">
+        <div style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;">Avg per User</div>
+        <strong>{{ "%.1f"|format(avg) }}</strong>
+    </div>
 </div>
 
-<h3>Recent Assessments</h3>
-
-<table class="modern-table">
-<tr><th>User</th><th>Role</th><th>Status</th><th>Date</th></tr>
-
-{% for r in recent %}
-<tr>
-<td>{{ r[0] }}</td>
-<td>{{ r[1] }}</td>
-<td>{{ r[2] }}</td>
-<td>{{ r[3] }}</td>
-</tr>
-{% endfor %}
-
-</table>
-
-<a href="/admin/assessments" class="btn-primary">View All Assessments</a>
+<!-- Recent table -->
+<div class="card" style="padding:0;overflow:hidden;">
+    <div style="padding:20px 24px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;justify-content:space-between;">
+        <h3 style="margin:0;font-size:16px;">Recent Assessments</h3>
+        <a href="/admin/assessments" class="btn-primary" style="font-size:12px;padding:8px 16px;text-decoration:none;">View All →</a>
+    </div>
+    <table class="modern-table">
+        <thead>
+            <tr>
+                <th>User</th>
+                <th>Role</th>
+                <th>Status</th>
+                <th>Date</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for r in recent %}
+            <tr>
+                <td style="font-weight:600;">{{ r[0] }}</td>
+                <td>{{ r[1] }}</td>
+                <td>
+                    <span style="
+                        display:inline-flex;align-items:center;gap:4px;
+                        padding:4px 10px;border-radius:20px;font-size:12px;font-weight:700;
+                        background:{% if 'Job Ready' in r[2] %}#d1fae5;color:#065f46{% elif 'Almost' in r[2] %}#fef3c7;color:#92400e{% else %}#fee2e2;color:#991b1b{% endif %};
+                    ">
+                        {{ r[2] }}
+                    </span>
+                </td>
+                <td style="color:#64748b;font-size:13px;">{{ r[3] }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
 
 {% endblock %}

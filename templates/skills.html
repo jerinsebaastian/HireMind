@@ -1,118 +1,255 @@
 {% extends "base.html" %}
 {% block content %}
 <head>
-    <title>Skill Assessment - HireMind</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <title>Skill Assessment – HireMind</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; }
+        body, .page-content { font-family: 'Plus Jakarta Sans', sans-serif; }
+
+        .page-wrapper { max-width: 820px; margin: 0 auto; }
+
+        .stepper {
+            display: flex; align-items: center; justify-content: center;
+            gap: 0; margin-bottom: 36px;
+        }
+        .stepper-step { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+        .stepper-circle {
+            width: 40px; height: 40px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 700; font-size: 14px;
+        }
+        .stepper-circle.done { background: #10b981; color: white; }
+        .stepper-circle.active { background: #2563eb; color: white; box-shadow: 0 4px 14px rgba(37,99,235,0.4); }
+        .stepper-circle.inactive { background: rgba(255,255,255,0.6); color: #94a3b8; border: 2px solid #cbd5e1; }
+        .stepper-label { font-size: 12px; font-weight: 600; color: #64748b; white-space: nowrap; }
+        .stepper-label.done-label { color: #10b981; }
+        .stepper-label.active-label { color: #2563eb; }
+        .stepper-line { width: 80px; height: 2px; background: #cbd5e1; margin: 0 4px; margin-bottom: 22px; }
+        .stepper-line.done { background: #10b981; }
+
+        .page-head { text-align: center; margin-bottom: 12px; }
+        .page-head h1 { font-size: 32px; font-weight: 800; color: #0f172a; letter-spacing: -0.8px; margin-bottom: 10px; }
+
+        .role-badge {
+            display: inline-flex; align-items: center; gap: 8px;
+            background: linear-gradient(135deg, #eff6ff, #dbeafe);
+            border: 1.5px solid #93c5fd;
+            padding: 9px 20px; border-radius: 50px;
+            font-size: 14px; color: #1e40af; font-weight: 600;
+            margin-bottom: 12px;
+        }
+        .role-badge span { font-weight: 800; color: #2563eb; }
+
+        .page-sub { font-size: 15px; color: #475569; text-align: center; margin-bottom: 32px; }
+
+        .prev-skills-banner {
+            background: linear-gradient(135deg, #fefce8, #fef3c7);
+            border: 1.5px solid #fcd34d;
+            border-radius: 12px;
+            padding: 14px 20px;
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 24px;
+            gap: 12px;
+        }
+        .prev-skills-banner span { font-size: 14px; color: #92400e; font-weight: 600; }
+        .btn-use-prev {
+            padding: 8px 18px;
+            background: #f59e0b;
+            color: white; border: none; border-radius: 8px;
+            font-size: 13px; font-weight: 700; font-family: inherit;
+            cursor: pointer; transition: all 0.2s; white-space: nowrap;
+        }
+        .btn-use-prev:hover { background: #d97706; }
+
+        .skills-list { display: flex; flex-direction: column; gap: 16px; margin-bottom: 28px; }
+
+        .skill-card {
+            background: white;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 22px 24px;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .skill-card:hover { border-color: #93c5fd; box-shadow: 0 4px 16px rgba(37,99,235,0.08); }
+
+        .skill-top {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 18px;
+        }
+        .skill-name { font-size: 17px; font-weight: 700; color: #0f172a; }
+        .skill-emoji { font-size: 28px; }
+
+        .levels-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+        }
+
+        .level-opt { position: relative; }
+        .level-opt input[type="radio"] { position: absolute; opacity: 0; pointer-events: none; }
+        .level-opt label {
+            display: flex; flex-direction: column; align-items: center;
+            padding: 14px 10px;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+            background: #f8fafc;
+        }
+        .level-opt label:hover { border-color: #93c5fd; transform: translateY(-2px); }
+        .level-opt input:checked + label {
+            background: linear-gradient(135deg, #eff6ff, #dbeafe);
+            border-color: #2563eb;
+            box-shadow: 0 4px 12px rgba(37,99,235,0.15);
+        }
+
+        .lv-dot {
+            width: 40px; height: 40px; border-radius: 50%;
+            margin-bottom: 8px;
+        }
+        .lv-0 { background: linear-gradient(135deg, #94a3b8, #64748b); }
+        .lv-1 { background: linear-gradient(135deg, #fb923c, #ea580c); }
+        .lv-2 { background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
+        .lv-3 { background: linear-gradient(135deg, #10b981, #059669); }
+
+        .lv-text { font-size: 13px; font-weight: 700; color: #0f172a; margin-bottom: 2px; }
+        .lv-desc { font-size: 11px; color: #64748b; }
+
+        .actions-row {
+            display: flex; align-items: center; justify-content: space-between;
+            gap: 16px; margin-top: 8px;
+        }
+
+        .btn-save-profile {
+            display: inline-flex; align-items: center; gap: 8px;
+            padding: 12px 22px;
+            background: white;
+            border: 2px solid #2563eb;
+            color: #2563eb;
+            border-radius: 10px;
+            font-size: 14px; font-weight: 700; font-family: inherit;
+            cursor: pointer; transition: all 0.2s;
+        }
+        .btn-save-profile:hover { background: #eff6ff; }
+
+        .btn-analyze {
+            display: inline-flex; align-items: center; gap: 10px;
+            padding: 14px 32px;
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            color: white; border: none; border-radius: 12px;
+            font-size: 15px; font-weight: 700; font-family: inherit;
+            cursor: pointer; transition: all 0.2s;
+        }
+        .btn-analyze:hover { transform: translateY(-2px); box-shadow: 0 10px 28px rgba(37,99,235,0.38); }
+
+        @media (max-width: 600px) {
+            .levels-row { grid-template-columns: repeat(2, 1fr); }
+            .actions-row { flex-direction: column; }
+            .btn-analyze { width: 100%; justify-content: center; }
+        }
+    </style>
 </head>
 
 {% if previous_assessments > 0 %}
 <script>
 window.onload = function() {
-
     let choice = confirm(
-        "You have previous skill assessment data.\n\n" +
-        "Press OK to use previous skills.\n" +
-        "Press Cancel to take a new assessment."
+        "You have previous skill assessment data.\n\nPress OK to use previous skills.\nPress Cancel to take a new assessment."
     );
-
     if (choice) {
         window.location.href = "/use_previous_skills_result?job_role={{ job_role }}";
     }
-
 };
 </script>
 {% endif %}
 
-<div class="container">
-    <div class="header">
-        <div class="logo">
-            <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
-                <circle cx="20" cy="20" r="18" fill="#2C7BE5" opacity="0.1"/>
-                <path d="M20 8L28 14V26L20 32L12 26V14L20 8Z" fill="#2C7BE5"/>
-                <circle cx="20" cy="20" r="4" fill="white"/>
-            </svg>
-            <h1>HireMind</h1>
+<div class="page-wrapper">
+
+    <!-- Stepper -->
+    <div class="stepper">
+        <div class="stepper-step">
+            <div class="stepper-circle done">✓</div>
+            <span class="stepper-label done-label">Select Role</span>
         </div>
-        <div class="step-indicator">
-            <div class="step completed">✓</div>
-            <div class="step-line completed"></div>
-            <div class="step active">2</div>
-            <div class="step-line"></div>
-            <div class="step">3</div>
+        <div class="stepper-line done"></div>
+        <div class="stepper-step">
+            <div class="stepper-circle active">2</div>
+            <span class="stepper-label active-label">Rate Skills</span>
+        </div>
+        <div class="stepper-line"></div>
+        <div class="stepper-step">
+            <div class="stepper-circle inactive">3</div>
+            <span class="stepper-label">View Results</span>
         </div>
     </div>
 
-    <div class="content-header">
-        <h2>Skill Assessment</h2>
-        <div class="job-badge">
-            <span class="badge-label">Target Role:</span>
-            <span class="badge-value">{{ job_role }}</span>
+    <div class="page-head">
+        <h1>Rate your skills</h1>
+        <div class="role-badge">
+            Target Role: <span>{{ job_role }}</span>
         </div>
-        <p class="subtitle">Rate your proficiency level for each skill. Be honest—this helps us give you accurate recommendations.</p>
     </div>
+    <p class="page-sub">Be honest — accurate self-assessment leads to better recommendations.</p>
 
     {% if saved_skills %}
-    <div style="margin-bottom:20px;">
-        <button type="button"
-            onclick="usePreviousSkills()"
-            class="btn-secondary">
-            Use Previous Skill Assessment
-        </button>
+    <div class="prev-skills-banner">
+        <span>💡 You have a saved skill profile from a previous assessment.</span>
+        <button type="button" class="btn-use-prev" onclick="usePreviousSkills()">Use Previous Skills</button>
     </div>
     {% endif %}
 
     <form action="/analyze" method="post">
         <input type="hidden" name="job_role" value="{{ job_role }}">
 
-        <div class="skills-container">
+        <div class="skills-list">
             {% for skill in ["Python", "SQL", "Machine Learning", "HTML", "CSS"] %}
-            <div class="skill-assessment-card">
-                <div class="skill-header">
-                    <h3>{{ skill }}</h3>
-                    <div class="skill-icon">
+            <div class="skill-card">
+                <div class="skill-top">
+                    <span class="skill-name">{{ skill }}</span>
+                    <span class="skill-emoji">
                         {% if skill == "Python" %}🐍
                         {% elif skill == "SQL" %}🗄️
                         {% elif skill == "Machine Learning" %}🧠
                         {% elif skill == "HTML" %}🌐
                         {% elif skill == "CSS" %}🎨
                         {% endif %}
-                    </div>
+                    </span>
                 </div>
-                
-                <div class="proficiency-options">
-                    <div class="proficiency-option">
+
+                <div class="levels-row">
+                    <div class="level-opt">
                         <input type="radio" name="{{ skill }}" id="{{ skill }}_0" value="0" required>
                         <label for="{{ skill }}_0">
-                            <div class="level-indicator level-0"></div>
-                            <span class="level-text">Not Familiar</span>
-                            <span class="level-desc">No experience</span>
+                            <div class="lv-dot lv-0"></div>
+                            <span class="lv-text">Not Familiar</span>
+                            <span class="lv-desc">No experience</span>
                         </label>
                     </div>
-
-                    <div class="proficiency-option">
+                    <div class="level-opt">
                         <input type="radio" name="{{ skill }}" id="{{ skill }}_1" value="1">
                         <label for="{{ skill }}_1">
-                            <div class="level-indicator level-1"></div>
-                            <span class="level-text">Beginner</span>
-                            <span class="level-desc">Basic knowledge</span>
+                            <div class="lv-dot lv-1"></div>
+                            <span class="lv-text">Beginner</span>
+                            <span class="lv-desc">Basic knowledge</span>
                         </label>
                     </div>
-
-                    <div class="proficiency-option">
+                    <div class="level-opt">
                         <input type="radio" name="{{ skill }}" id="{{ skill }}_2" value="2">
                         <label for="{{ skill }}_2">
-                            <div class="level-indicator level-2"></div>
-                            <span class="level-text">Intermediate</span>
-                            <span class="level-desc">Working proficiency</span>
+                            <div class="lv-dot lv-2"></div>
+                            <span class="lv-text">Intermediate</span>
+                            <span class="lv-desc">Working proficiency</span>
                         </label>
                     </div>
-
-                    <div class="proficiency-option">
+                    <div class="level-opt">
                         <input type="radio" name="{{ skill }}" id="{{ skill }}_3" value="3">
                         <label for="{{ skill }}_3">
-                            <div class="level-indicator level-3"></div>
-                            <span class="level-text">Advanced</span>
-                            <span class="level-desc">Expert level</span>
+                            <div class="lv-dot lv-3"></div>
+                            <span class="lv-text">Advanced</span>
+                            <span class="lv-desc">Expert level</span>
                         </label>
                     </div>
                 </div>
@@ -120,18 +257,14 @@ window.onload = function() {
             {% endfor %}
         </div>
 
-        <div style="margin-top:15px;">
-            <button type="button" class="btn-secondary" onclick="saveSkills()">
-                Save Skills to Profile
+        <div class="actions-row">
+            <button type="button" class="btn-save-profile" onclick="saveSkills()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z"/></svg>
+                Save to Profile
             </button>
-        </div>
-
-        <div class="button-container">
-            <button type="submit" class="btn-primary">
-                Analyze My Skills
-                <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
-                    <path d="M10 4L8.59 5.41L13.17 10L8.59 14.59L10 16L16 10L10 4Z"/>
-                </svg>
+            <button type="submit" class="btn-analyze">
+                Analyse My Skills
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6z"/></svg>
             </button>
         </div>
     </form>
@@ -140,49 +273,33 @@ window.onload = function() {
 <script>
 function usePreviousSkills() {
     fetch('/use_previous_skills', { method: 'POST' })
-        .then(response => response.json())
+        .then(r => r.json())
         .then(data => {
             for (let skill in data) {
-                let level = data[skill];
-                let radio = document.getElementById(skill + "_" + level);
+                let radio = document.getElementById(skill + "_" + data[skill]);
                 if (radio) radio.checked = true;
             }
         });
 }
 
 function saveSkills() {
-
     const skills = ["Python","SQL","Machine Learning","HTML","CSS"];
     let data = {};
-
     for (let skill of skills) {
-
-        let selected = document.querySelector(
-            'input[name="'+skill+'"]:checked'
-        );
-
-        if (!selected) {
-            alert("Please select level for " + skill);
-            return;
-        }
-
-        data[skill] = parseInt(selected.value);
+        let sel = document.querySelector('input[name="'+skill+'"]:checked');
+        if (!sel) { alert("Please select level for " + skill); return; }
+        data[skill] = parseInt(sel.value);
     }
-
     fetch("/save_skill_profile", {
         method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data)
-    })
-    .then(response => response.json())
-    .then(result => {
-        alert("Skill profile saved successfully!");
+    }).then(r => r.json()).then(() => {
+        const btn = document.querySelector('.btn-save-profile');
+        btn.textContent = '✓ Saved!';
+        setTimeout(() => { btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z"/></svg> Save to Profile'; }, 2000);
     });
-
 }
-
 </script>
 
 {% endblock %}

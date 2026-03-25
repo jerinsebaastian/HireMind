@@ -3,201 +3,159 @@
 
 <h2>Job Roles</h2>
 
-<h3>Add Role</h3>
+<!-- Add Role Form -->
+<div class="card" style="margin-bottom:24px;">
+    <h3 style="margin-top:0;">Add New Role</h3>
+    <form method="post" action="/add_role" onsubmit="return confirmAddRole()">
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px;">
+            <input name="role" type="text" placeholder="Role name" required style="min-width:220px;">
+            <input name="icon" type="text" placeholder="Emoji Icon (e.g. 💻)" required style="width:160px;">
+        </div>
 
-<form method="post" action="/add_role" onsubmit="return confirmAddRole()">
+        <div id="skills-container">
+            <div class="skill-row">
+                <input name="skill[]" type="text" placeholder="Skill name" required>
+                <input name="weight[]" type="number" min="1" max="5" placeholder="Weight (1–5)" required>
+                <button type="button" onclick="removeSkill(this)" style="background:#fee2e2;color:#991b1b;border:none;">✕</button>
+            </div>
+            <div class="skill-row">
+                <input name="skill[]" type="text" placeholder="Skill name" required>
+                <input name="weight[]" type="number" min="1" max="5" placeholder="Weight (1–5)" required>
+                <button type="button" onclick="removeSkill(this)" style="background:#fee2e2;color:#991b1b;border:none;">✕</button>
+            </div>
+            <div class="skill-row">
+                <input name="skill[]" type="text" placeholder="Skill name" required>
+                <input name="weight[]" type="number" min="1" max="5" placeholder="Weight (1–5)" required>
+                <button type="button" onclick="removeSkill(this)" style="background:#fee2e2;color:#991b1b;border:none;">✕</button>
+            </div>
+        </div>
 
-<input name="role" placeholder="Role" required>
-<input name="icon" placeholder="Icon" required>
-
-<div id="skills-container">
-
-<div>
-<input name="skill[]" placeholder="Skill" required>
-<input name="weight[]" type="number" max="5" required>
-</div>
-
-<div>
-<input name="skill[]" placeholder="Skill" required>
-<input name="weight[]" type="number" max="5" required>
-</div>
-
-<div>
-<input name="skill[]" placeholder="Skill" required>
-<input name="weight[]" type="number" max="5" required>
-</div>
-
-</div>
-
-<button type="button" onclick="addSkill()">+ Add Skill</button>
-
-<br><br>
-<button>Add Role</button>
-
-</form>
-
-<h3>Manage Roles</h3>
-
-<form method="get" style="margin-bottom:20px;">
-    <input 
-        type="text" 
-        name="search" 
-        placeholder="Search role..."                             
-        value="{{ search }}"
-        style="padding:8px; border-radius:6px; border:1px solid #ccc;"
-    >
-    <button class="btn-primary">Search</button>
-</form>
-
-<table class="modern-table">
-
-<tr>
-<th>Role</th><th>Icon</th><th>Skills</th><th>Action</th>
-</tr>
-
-{% for r in roles %}
-<tr>
-<td>{{ r[1] }}</td>
-<td>{{ r[2] }}</td>
-<td>
-    {% for skill in r[3].split(',') %}
-
-        {% set parts = skill.strip().split('(') %}
-        {% set name = parts[0] %}
-        {% set weight = parts[1].replace(')', '') %}
-
-        <span class="skill-pill">
-            {{ name }}
-            <span class="skill-weight">{{ weight }}</span>
-        </span>
-
-    {% endfor %}
-</td>
-<td>
-    <!-- ✅ EDIT BUTTON -->
-    <button onclick="openEdit(
-    '{{ r[0] }}',
-    '{{ r[1] }}',
-    '{{ r[2] }}'
-    )">Edit</button>
-
-    <!-- ✅ DELETE BUTTON -->
-    <form method="post" action="/delete_role/{{ r[0] }}" onsubmit="return confirm('Are you sure?')">
-        <button>Delete</button>
+        <div style="display:flex;gap:10px;margin-top:12px;align-items:center;flex-wrap:wrap;">
+            <button type="button" onclick="addSkill()" style="border-style:dashed;color:#2563eb;border-color:#93c5fd;background:#eff6ff;">
+                + Add Skill
+            </button>
+            <button type="submit" class="btn-primary">Add Role</button>
+        </div>
     </form>
-</td>
+</div>
 
-</tr>
-{% endfor %}
+<!-- Search + Manage Roles -->
+<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:16px;">
+    <h3 style="margin:0;">Manage Roles</h3>
+    <form method="get" style="display:flex;gap:8px;margin:0;">
+        <input type="text" name="search" placeholder="Search roles…" value="{{ search }}" style="min-width:200px;">
+        <button type="submit" class="btn-primary" style="margin:0;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+            Search
+        </button>
+    </form>
+</div>
 
-</table>
+<div class="card" style="padding:0;overflow:hidden;">
+    <table class="modern-table">
+        <thead>
+            <tr>
+                <th>Role</th>
+                <th>Icon</th>
+                <th>Skills</th>
+                <th style="width:120px;">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for r in roles %}
+            <tr>
+                <td style="font-weight:700;">{{ r[1] }}</td>
+                <td style="font-size:24px;">{{ r[2] }}</td>
+                <td>
+                    {% for skill in r[3].split(',') %}
+                        {% set parts = skill.strip().split('(') %}
+                        {% set name = parts[0] %}
+                        {% set weight = parts[1].replace(')', '') %}
+                        <span class="skill-pill">
+                            {{ name }}<span class="skill-weight">{{ weight }}</span>
+                        </span>
+                    {% endfor %}
+                </td>
+                <td>
+                    <div style="display:flex;gap:6px;align-items:center;">
+                        <button onclick="openEdit('{{ r[0] }}','{{ r[1] }}','{{ r[2] }}')"
+                            style="padding:7px 12px;font-size:12px;background:#eff6ff;color:#2563eb;border-color:#93c5fd;">
+                            Edit
+                        </button>
+                        <form method="post" action="/delete_role/{{ r[0] }}" onsubmit="return confirm('Delete this role?')" style="margin:0;">
+                            <button style="padding:7px 12px;font-size:12px;background:#fee2e2;color:#991b1b;border-color:#fca5a5;">
+                                Delete
+                            </button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
 
-<!-- ✅ EDIT POPUP MODAL -->
-
+<!-- Edit Modal -->
 <div id="editModal" class="modal-overlay">
-
-  <div class="modal-box">
-
-    <h3>Edit Role</h3>
-
-    <form method="post" action="/edit_role">
-
-      <input type="hidden" name="id" id="edit_id">
-
-      <input type="text" name="role" id="edit_role" placeholder="Role" required>
-      <input type="text" name="icon" id="edit_icon" placeholder="Icon" required>
-
-      <h4>Skills</h4>
-
-      <div id="edit-skills-container"></div>
-
-      <button type="button" onclick="addEditSkill()">+ Add Skill</button>
-
-      <br><br>
-
-      <button type="submit" class="btn-primary">Save</button>
-      <button type="button" onclick="closeEdit()">Cancel</button>
-
-    </form>
-
-  </div>
-
+    <div class="modal-box">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+            <h3 style="margin:0;">Edit Role</h3>
+            <button onclick="closeEdit()" style="padding:6px 12px;font-size:12px;">✕ Close</button>
+        </div>
+        <form method="post" action="/edit_role">
+            <input type="hidden" name="id" id="edit_id">
+            <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;">
+                <input type="text" name="role" id="edit_role" placeholder="Role name" required style="flex:1;min-width:140px;">
+                <input type="text" name="icon" id="edit_icon" placeholder="Icon" required style="width:100px;">
+            </div>
+            <h4 style="font-size:13px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;">Skills</h4>
+            <div id="edit-skills-container"></div>
+            <button type="button" onclick="addEditSkill()" style="border-style:dashed;color:#2563eb;border-color:#93c5fd;background:#eff6ff;margin-bottom:20px;">+ Add Skill</button>
+            <br>
+            <div style="display:flex;gap:10px;">
+                <button type="submit" class="btn-primary">Save Changes</button>
+                <button type="button" onclick="closeEdit()">Cancel</button>
+            </div>
+        </form>
+    </div>
 </div>
 
-<!-- ✅ JAVASCRIPT -->
+<!-- Scroll to top -->
+<button id="topBtn" onclick="scrollToTop()" style="display:none;position:fixed;bottom:24px;right:24px;z-index:99;border:none;background:linear-gradient(135deg,#2563eb,#1d4ed8);color:white;cursor:pointer;width:44px;height:44px;border-radius:50%;font-size:18px;box-shadow:0 4px 16px rgba(37,99,235,0.4);align-items:center;justify-content:center;">↑</button>
 
 <script>
-
 function openEdit(id, role, icon){
-
     document.getElementById("editModal").style.display = "flex";
-
     document.getElementById("edit_id").value = id;
     document.getElementById("edit_role").value = role;
     document.getElementById("edit_icon").value = icon;
-
     fetch(`/get_role_skills/${id}`)
-    .then(res => res.json())
-    .then(data => {
-
-        let container = document.getElementById("edit-skills-container");
-        container.innerHTML = "";
-
-        data.forEach(skill => {
-            container.innerHTML += createSkillRow(skill.name, skill.weight);
+        .then(res => res.json())
+        .then(data => {
+            let c = document.getElementById("edit-skills-container");
+            c.innerHTML = "";
+            data.forEach(skill => { c.innerHTML += createSkillRow(skill.name, skill.weight); });
         });
-    });
 }
-
-function closeEdit(){
-    document.getElementById("editModal").style.display = "none";
-}
+function closeEdit(){ document.getElementById("editModal").style.display = "none"; }
 
 function createSkillRow(skill="", weight=""){
-    return `
-    <div class="skill-row">
-        <input name="skill[]" value="${skill}" placeholder="Skill" required>
-        <input name="weight[]" type="number" value="${weight}" max="5" min="1" required>
-
-        <button type="button" onclick="removeSkill(this)">❌</button>
-    </div>
-    `;
+    return `<div class="skill-row">
+        <input name="skill[]" type="text" value="${skill}" placeholder="Skill name" required>
+        <input name="weight[]" type="number" value="${weight}" max="5" min="1" placeholder="Weight(1–5)" required>
+        <button type="button" onclick="removeSkill(this)" style="background:#fee2e2;color:#991b1b;border:none;">✕</button>
+    </div>`;
 }
+function addEditSkill(){ document.getElementById("edit-skills-container").innerHTML += createSkillRow(); }
+function addSkill(){ document.getElementById("skills-container").innerHTML += createSkillRow(); }
+function removeSkill(btn){ btn.parentElement.remove(); }
+function confirmAddRole(){ return confirm("Add this new role?"); }
 
-function addEditSkill(){
-    let container = document.getElementById("edit-skills-container");
-    container.innerHTML += createSkillRow();
-}
-
-function removeSkill(btn){
-    btn.parentElement.remove();
-}
-
-function addSkill(){
-    let container = document.getElementById("skills-container");
-    container.innerHTML += createSkillRow();
-}
-
-function confirmAddRole(){
-    return confirm("Are you sure you want to add this role?");
-}
-
-window.onscroll = function() {
+window.onscroll = function(){
     let btn = document.getElementById("topBtn");
-    if (document.body.scrollTop > 200 || document.documentElement.scrollTop > 200) {
-        btn.style.display = "block";
-    } else {
-        btn.style.display = "none";
-    }
+    btn.style.display = (document.documentElement.scrollTop > 200) ? "flex" : "none";
 };
-
-function scrollToTop(){
-    window.scrollTo({top:0, behavior:'smooth'});
-}
-
+function scrollToTop(){ window.scrollTo({top:0, behavior:'smooth'}); }
 </script>
-
-<!-- 🔝 GO TO TOP BUTTON -->
-<button id="topBtn" onclick="scrollToTop()">⬆</button>
 
 {% endblock %}

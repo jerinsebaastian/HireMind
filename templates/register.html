@@ -1,187 +1,259 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Register - HireMind</title>
+    <title>Register – HireMind</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <style>
-        .auth-container {
-            max-width: 480px;
-            margin: 80px auto;
-            background: white;
-            padding: 48px;
-            border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            animation: slideIn 0.6s ease-out;
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            background: #0f172a;
         }
-        
-        .auth-header {
-            text-align: center;
-            margin-bottom: 40px;
+
+        .auth-left {
+            width: 44%;
+            background: linear-gradient(145deg, #064e3b 0%, #065f46 50%, #047857 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 60px 64px;
+            position: relative;
+            overflow: hidden;
         }
-        
-        .auth-logo {
+        .auth-left::before {
+            content: '';
+            position: absolute;
+            width: 420px; height: 420px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.05);
+            top: -120px; right: -120px;
+        }
+        .auth-left::after {
+            content: '';
+            position: absolute;
+            width: 280px; height: 280px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.05);
+            bottom: -60px; left: -60px;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 56px;
+        }
+        .brand-name { font-size: 26px; font-weight: 800; color: white; letter-spacing: -0.5px; }
+
+        .hero-headline {
+            font-size: 40px;
+            font-weight: 800;
+            color: white;
+            line-height: 1.18;
+            letter-spacing: -1.2px;
+            margin-bottom: 18px;
+        }
+        .hero-headline span { color: #6ee7b7; }
+        .hero-sub {
+            font-size: 16px;
+            color: rgba(255,255,255,0.7);
+            line-height: 1.7;
+            max-width: 380px;
+            margin-bottom: 44px;
+        }
+
+        .steps { display: flex; flex-direction: column; gap: 20px; }
+        .step-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+        }
+        .step-num {
+            width: 34px; height: 34px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.15);
+            color: white;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 13px;
+            font-weight: 700;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+        .step-text h4 { font-size: 14px; font-weight: 700; color: white; margin-bottom: 2px; }
+        .step-text p { font-size: 13px; color: rgba(255,255,255,0.6); }
+
+        .auth-right {
+            flex: 1;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 12px;
-            margin-bottom: 24px;
+            background: #f8fafc;
+            padding: 40px;
         }
-        
-        .auth-logo h1 {
-            font-size: 32px;
-            font-weight: 700;
-            background: linear-gradient(135deg, #2C7BE5 0%, #1a5fd0 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+
+        .auth-card {
+            width: 100%;
+            max-width: 440px;
+            background: white;
+            border-radius: 20px;
+            padding: 48px 44px;
+            box-shadow: 0 4px 32px rgba(0,0,0,0.08);
+            animation: fadeUp 0.5s ease-out;
         }
-        
-        .auth-title {
-            font-size: 24px;
-            color: #1e293b;
-            font-weight: 700;
-            margin-bottom: 8px;
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(24px); }
+            to   { opacity: 1; transform: translateY(0); }
         }
-        
-        .auth-subtitle {
-            color: #64748b;
-            font-size: 15px;
-        }
-        
-        .form-group {
-            margin-bottom: 24px;
-        }
-        
+
+        .card-title { font-size: 28px; font-weight: 800; color: #0f172a; letter-spacing: -0.7px; margin-bottom: 6px; }
+        .card-sub { font-size: 14px; color: #64748b; margin-bottom: 32px; }
+
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+        .form-group { margin-bottom: 18px; }
         .form-label {
             display: block;
-            font-weight: 600;
-            color: #1e293b;
-            margin-bottom: 8px;
-            font-size: 14px;
+            font-size: 12px;
+            font-weight: 700;
+            color: #374151;
+            margin-bottom: 7px;
+            letter-spacing: 0.4px;
+            text-transform: uppercase;
         }
-        
         .form-input {
             width: 100%;
-            padding: 14px 16px;
-            border: 2px solid #e2e8f0;
+            padding: 12px 14px;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 14px;
+            font-family: inherit;
+            color: #0f172a;
+            background: #f8fafc;
+            transition: all 0.2s;
+            outline: none;
+        }
+        .form-input:focus {
+            border-color: #059669;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(5,150,105,0.1);
+        }
+        .form-input::placeholder { color: #94a3b8; }
+
+        .password-hint { font-size: 12px; color: #94a3b8; margin-top: 6px; }
+
+        .btn-auth {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #059669 0%, #047857 100%);
+            color: white;
+            border: none;
             border-radius: 10px;
             font-size: 15px;
-            transition: all 0.3s ease;
+            font-weight: 700;
             font-family: inherit;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-top: 6px;
         }
-        
-        .form-input:focus {
-            outline: none;
-            border-color: #2C7BE5;
-            box-shadow: 0 0 0 3px rgba(44, 123, 229, 0.1);
+        .btn-auth:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(5,150,105,0.35);
         }
-        
-        .form-input::placeholder {
-            color: #94a3b8;
-        }
-        
+
         .auth-footer {
             text-align: center;
             margin-top: 24px;
+            font-size: 14px;
             color: #64748b;
-            font-size: 15px;
         }
-        
-        .auth-footer a {
-            color: #2C7BE5;
-            text-decoration: none;
-            font-weight: 600;
-            transition: color 0.3s ease;
+        .auth-footer a { color: #059669; font-weight: 700; text-decoration: none; }
+        .auth-footer a:hover { text-decoration: underline; }
+
+        @media (max-width: 800px) {
+            .auth-left { display: none; }
         }
-        
-        .auth-footer a:hover {
-            color: #1a5fd0;
-        }
-        
-        .password-hint {
-            font-size: 13px;
-            color: #64748b;
-            margin-top: 6px;
+        @media (max-width: 480px) {
+            .form-row { grid-template-columns: 1fr; }
+            .auth-card { padding: 32px 24px; }
         }
     </style>
 </head>
 <body>
 
-<div class="auth-container">
-    <div class="auth-header">
-        <div class="auth-logo">
-            <svg width="48" height="48" viewBox="0 0 40 40" fill="none">
-                <circle cx="20" cy="20" r="18" fill="#2C7BE5" opacity="0.1"/>
-                <path d="M20 8L28 14V26L20 32L12 26V14L20 8Z" fill="#2C7BE5"/>
-                <circle cx="20" cy="20" r="4" fill="white"/>
-            </svg>
-            <h1>HireMind</h1>
-        </div>
-        <h2 class="auth-title">Create Account</h2>
-        <p class="auth-subtitle">Start your journey to career readiness</p>
+<div class="auth-left">
+    <div class="brand">
+        <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+            <circle cx="20" cy="20" r="18" fill="white" opacity="0.2"/>
+            <path d="M20 8L28 14V26L20 32L12 26V14L20 8Z" fill="white"/>
+            <circle cx="20" cy="20" r="4" fill="#059669"/>
+        </svg>
+        <span class="brand-name">HireMind</span>
     </div>
 
-    <form method="post">
-        <div class="form-group">
-            <label class="form-label" for="name">Full Name</label>
-            <input 
-                type="text" 
-                id="name"
-                name="name" 
-                class="form-input"
-                placeholder="Enter your full name" 
-                required
-            >
-        </div>
+    <h1 class="hero-headline">Start your path<br>to <span>job readiness</span><br>today.</h1>
+    <p class="hero-sub">Create your free account and get a personalised analysis of where you stand for your target role.</p>
 
-        <div class="form-group">
-            <label class="form-label" for="email">Email Address</label>
-            <input 
-                type="email" 
-                id="email"
-                name="email" 
-                class="form-input"
-                placeholder="Enter your email" 
-                required
-            >
+    <div class="steps">
+        <div class="step-item">
+            <div class="step-num">1</div>
+            <div class="step-text">
+                <h4>Create your profile</h4>
+                <p>Sign up and set your skill levels</p>
+            </div>
         </div>
-
-        <div class="form-group">
-            <label class="form-label" for="password">Password</label>
-            <input 
-                type="password" 
-                id="password"
-                name="password" 
-                class="form-input"
-                placeholder="Create a strong password" 
-                required
-            >
-            <p class="password-hint">Use at least 8 characters with letters and numbers</p>
+        <div class="step-item">
+            <div class="step-num">2</div>
+            <div class="step-text">
+                <h4>Choose your target role</h4>
+                <p>Pick from industry-relevant job roles</p>
+            </div>
         </div>
-
-        <div class="form-group">
-            <label class="form-label" for="confirm_password">Confirm Password</label>
-            <input 
-                type="password" 
-                id="confirm_password"
-                name="confirm_password" 
-                class="form-input"
-                placeholder="Re-enter your password" 
-                required
-            >
+        <div class="step-item">
+            <div class="step-num">3</div>
+            <div class="step-text">
+                <h4>Get your AI readiness report</h4>
+                <p>See exactly what to learn next</p>
+            </div>
         </div>
+    </div>
+</div>
 
-        <button type="submit" class="btn-primary" style="width: 100%; justify-content: center;">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
-            </svg>
-            Create Account
-        </button>
+<div class="auth-right">
+    <div class="auth-card">
+        <h2 class="card-title">Create account</h2>
+        <p class="card-sub">Join thousands preparing smarter for their careers</p>
+
+        <form method="post">
+            <div class="form-group">
+                <label class="form-label" for="name">Full Name</label>
+                <input type="text" id="name" name="name" class="form-input" placeholder="Your full name" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="email">Email Address</label>
+                <input type="email" id="email" name="email" class="form-input" placeholder="you@example.com" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="password">Password</label>
+                <input type="password" id="password" name="password" class="form-input" placeholder="Min. 8 characters" required>
+                <p class="password-hint">Use letters, numbers and special characters for a strong password</p>
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="confirm_password">Confirm Password</label>
+                <input type="password" id="confirm_password" name="confirm_password" class="form-input" placeholder="Re-enter your password" required>
+            </div>
+            <button type="submit" class="btn-auth">Create Account →</button>
+        </form>
 
         <div class="auth-footer">
-            Already have an account? <a href="/login">Sign in instead</a>
+            Already have an account? <a href="/login">Sign in</a>
         </div>
-    </form>
+    </div>
 </div>
 
 </body>

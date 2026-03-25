@@ -1,82 +1,279 @@
 {% extends "base.html" %}
 {% block content %}
 <head>
-    <title>Results - HireMind</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <title>Results – HireMind</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; }
+        body, .page-content { font-family: 'Plus Jakarta Sans', sans-serif; }
+
+        .page-wrapper { max-width: 960px; margin: 0 auto; }
+
+        /* Stepper */
+        .stepper { display: flex; align-items: center; justify-content: center; gap: 0; margin-bottom: 36px; }
+        .stepper-step { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+        .stepper-circle { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; }
+        .stepper-circle.done { background: #10b981; color: white; }
+        .stepper-circle.active { background: #2563eb; color: white; box-shadow: 0 4px 14px rgba(37,99,235,0.4); }
+        .stepper-label { font-size: 12px; font-weight: 600; color: #64748b; }
+        .stepper-label.done-label { color: #10b981; }
+        .stepper-label.active-label { color: #2563eb; }
+        .stepper-line { width: 80px; height: 2px; background: #10b981; margin: 0 4px; margin-bottom: 22px; }
+
+        /* Confetti canvas */
+        #confetti-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9999; }
+
+        /* Hero result banner */
+        .result-hero {
+            background: white;
+            border-radius: 20px;
+            padding: 36px 40px;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 24px;
+            box-shadow: 0 2px 16px rgba(0,0,0,0.06);
+            border: 1.5px solid #e2e8f0;
+        }
+        .result-hero-left h1 { font-size: 28px; font-weight: 800; color: #0f172a; letter-spacing: -0.7px; margin-bottom: 6px; }
+        .result-hero-left p { font-size: 15px; color: #475569; }
+        .readiness-pill {
+            display: inline-flex; align-items: center; gap: 10px;
+            padding: 14px 28px; border-radius: 50px;
+            font-size: 18px; font-weight: 800;
+            white-space: nowrap;
+        }
+        .pill-ready { background: linear-gradient(135deg, #d1fae5, #a7f3d0); color: #065f46; border: 2px solid #6ee7b7; }
+        .pill-almost { background: linear-gradient(135deg, #fef3c7, #fde68a); color: #92400e; border: 2px solid #fcd34d; }
+        .pill-not { background: linear-gradient(135deg, #fee2e2, #fecaca); color: #991b1b; border: 2px solid #fca5a5; }
+
+        /* Summary cards */
+        .summary-row {
+            display: grid; grid-template-columns: repeat(3, 1fr);
+            gap: 16px; margin-bottom: 28px;
+        }
+        .s-card {
+            background: white; border-radius: 16px;
+            padding: 22px 24px;
+            border: 1.5px solid #e2e8f0;
+            display: flex; align-items: center; gap: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+        .s-icon { font-size: 36px; }
+        .s-label { font-size: 12px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+        .s-val { font-size: 20px; font-weight: 800; color: #0f172a; }
+
+        /* Sections */
+        .section {
+            background: white; border-radius: 20px;
+            padding: 28px 32px; margin-bottom: 20px;
+            border: 1.5px solid #e2e8f0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+        .section-title {
+            display: flex; align-items: center; gap: 10px;
+            font-size: 20px; font-weight: 800; color: #0f172a;
+            letter-spacing: -0.4px; margin-bottom: 22px;
+        }
+        .section-title svg { color: #2563eb; }
+
+        /* Table */
+        .modern-table { width: 100%; border-collapse: collapse; }
+        .modern-table th {
+            background: #f8fafc; padding: 13px 16px;
+            text-align: left; font-size: 12px; font-weight: 700;
+            color: #475569; text-transform: uppercase; letter-spacing: 0.5px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        .modern-table td {
+            padding: 14px 16px; border-bottom: 1px solid #f1f5f9;
+            font-size: 14px; color: #0f172a; vertical-align: middle;
+        }
+        .modern-table tr:last-child td { border-bottom: none; }
+        .modern-table tr:hover td { background: #f8fafc; }
+
+        .skill-name-cell { font-weight: 700; display: flex; align-items: center; gap: 8px; }
+        .skill-dot { width: 8px; height: 8px; border-radius: 50%; background: #2563eb; flex-shrink: 0; }
+
+        .lv-badge {
+            display: inline-block; padding: 4px 12px; border-radius: 20px;
+            font-size: 12px; font-weight: 700;
+        }
+        .lv-badge.lv-0 { background: #f1f5f9; color: #475569; }
+        .lv-badge.lv-1 { background: #fff7ed; color: #ea580c; }
+        .lv-badge.lv-2 { background: #eff6ff; color: #2563eb; }
+        .lv-badge.lv-3 { background: #d1fae5; color: #065f46; }
+        .lv-badge.required { background: #faf5ff; color: #7c3aed; }
+
+        .importance-dots { display: flex; gap: 4px; align-items: center; }
+        .imp-dot { width: 10px; height: 10px; border-radius: 50%; background: #e2e8f0; }
+        .imp-dot.filled { background: #2563eb; }
+
+        .status-badge {
+            display: inline-flex; align-items: center; gap: 5px;
+            padding: 5px 12px; border-radius: 20px;
+            font-size: 12px; font-weight: 700;
+        }
+        .status-Strong { background: #d1fae5; color: #065f46; }
+        .status-Moderate { background: #eff6ff; color: #1e40af; }
+        .status-Weak { background: #fff7ed; color: #92400e; }
+        .status-Missing { background: #fee2e2; color: #991b1b; }
+
+        .critical-tag {
+            background: #fee2e2; color: #991b1b;
+            padding: 4px 10px; border-radius: 20px;
+            font-size: 11px; font-weight: 700;
+        }
+
+        /* Recommendations */
+        .recs-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px; }
+        .rec-card {
+            background: #f8fafc; border: 1.5px solid #e2e8f0;
+            border-radius: 14px; padding: 20px;
+            transition: all 0.2s;
+        }
+        .rec-card:hover { border-color: #93c5fd; transform: translateY(-2px); }
+
+        .rec-rank {
+            display: inline-flex; align-items: center; justify-content: center;
+            width: 28px; height: 28px; border-radius: 8px;
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            color: white; font-size: 12px; font-weight: 800;
+            margin-bottom: 10px;
+        }
+        .rec-card h4 { font-size: 16px; font-weight: 800; color: #0f172a; margin-bottom: 8px; }
+        .priority-bar-wrap { background: #e2e8f0; border-radius: 999px; height: 6px; overflow: hidden; }
+        .priority-bar { background: linear-gradient(90deg, #2563eb, #1d4ed8); height: 100%; border-radius: 999px; transition: width 0.8s ease; }
+        .priority-score { font-size: 12px; color: #64748b; font-weight: 600; margin-top: 6px; }
+
+        /* AI Role suggestions */
+        .role-sugg-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px,1fr)); gap: 14px; }
+        .role-sugg-card {
+            background: #f8fafc; border: 1.5px solid #e2e8f0;
+            border-radius: 14px; padding: 18px 20px;
+            display: flex; align-items: center; justify-content: space-between; gap: 12px;
+        }
+        .role-sugg-card h4 { font-size: 15px; font-weight: 700; color: #0f172a; }
+        .gap-chip {
+            background: #eff6ff; color: #2563eb; padding: 5px 12px;
+            border-radius: 20px; font-size: 12px; font-weight: 700; white-space: nowrap;
+        }
+
+        .success-card {
+            background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+            border: 2px solid #6ee7b7;
+            border-radius: 16px; padding: 32px;
+            text-align: center;
+        }
+        .success-card .s-emoji { font-size: 48px; margin-bottom: 12px; }
+        .success-card h4 { font-size: 22px; font-weight: 800; color: #065f46; margin-bottom: 8px; }
+        .success-card p { color: #047857; font-size: 15px; }
+
+        .btn-row { display: flex; justify-content: center; gap: 12px; margin-top: 8px; flex-wrap: wrap; }
+        .btn-primary {
+            display: inline-flex; align-items: center; gap: 8px;
+            padding: 13px 28px; background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            color: white; border: none; border-radius: 10px;
+            font-size: 14px; font-weight: 700; font-family: inherit;
+            cursor: pointer; transition: all 0.2s; text-decoration: none;
+        }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(37,99,235,0.35); }
+        .btn-secondary {
+            display: inline-flex; align-items: center; gap: 8px;
+            padding: 13px 28px; background: white;
+            border: 2px solid #e2e8f0;
+            color: #475569; border-radius: 10px;
+            font-size: 14px; font-weight: 700; font-family: inherit;
+            cursor: pointer; transition: all 0.2s;
+        }
+        .btn-secondary:hover { border-color: #2563eb; color: #2563eb; }
+
+        #topBtn {
+            display: none; position: fixed; bottom: 28px; right: 28px; z-index: 99;
+            border: none; background: linear-gradient(135deg,#2563eb,#1d4ed8);
+            color: white; cursor: pointer; padding: 14px 16px; border-radius: 50%;
+            font-size: 18px; box-shadow: 0 4px 16px rgba(37,99,235,0.4);
+            transition: all 0.2s; font-family: inherit;
+        }
+        #topBtn:hover { transform: translateY(-3px); }
+
+        @media (max-width: 700px) {
+            .summary-row { grid-template-columns: 1fr; }
+            .result-hero { flex-direction: column; }
+        }
+    </style>
 </head>
-<body>
 
-<div class="container">
-    <div class="header">
-        <div class="logo">
-            <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
-                <circle cx="20" cy="20" r="18" fill="#2C7BE5" opacity="0.1"/>
-                <path d="M20 8L28 14V26L20 32L12 26V14L20 8Z" fill="#2C7BE5"/>
-                <circle cx="20" cy="20" r="4" fill="white"/>
-            </svg>
-            <h1>HireMind</h1>
+<canvas id="confetti-canvas"></canvas>
+
+<div class="page-wrapper">
+    <!-- Stepper -->
+    <div class="stepper">
+        <div class="stepper-step">
+            <div class="stepper-circle done">✓</div>
+            <span class="stepper-label done-label">Select Role</span>
         </div>
-        <div class="step-indicator">
-            <div class="step completed">✓</div>
-            <div class="step-line completed"></div>
-            <div class="step completed">✓</div>
-            <div class="step-line completed"></div>
-            <div class="step active">3</div>
+        <div class="stepper-line"></div>
+        <div class="stepper-step">
+            <div class="stepper-circle done">✓</div>
+            <span class="stepper-label done-label">Rate Skills</span>
         </div>
-    </div>
-
-    <div class="content-header">
-        <h2>Your Skill Gap Analysis</h2>
-        <p class="subtitle">Here's your personalized assessment based on your target role</p>
-    </div>
-
-    <!-- Celebration Animation Container -->
-    <div id="celebration-container"></div>
-
-    <!-- Results Summary Cards -->
-    <div class="results-summary">
-        <div class="summary-card">
-            <div class="card-icon">🎯</div>
-            <div class="card-content">
-                <div class="card-label">Target Role</div>
-                <div class="card-value">{{ job_role }}</div>
-            </div>
-        </div>
-
-        <div class="summary-card">
-            <div class="card-icon">📊</div>
-            <div class="card-content">
-                <div class="card-label">Skill Gap Score</div>
-                <div class="card-value">{{ total_gap }}</div>
-            </div>
-        </div>
-
-        <div class="summary-card readiness-card">
-            <div class="card-icon">
-                {% if "Job Ready" in readiness %}🎉
-                {% elif "Almost Ready" in readiness %}⚡
-                {% else %}📚
-                {% endif %}
-            </div>
-            <div class="card-content">
-                <div class="card-label">Readiness Status</div>
-                    <div class="card-value readiness-{{ readiness.replace(' ', '-') }}">
-                        {{ readiness }}
-                    </div>
-            </div>
+        <div class="stepper-line"></div>
+        <div class="stepper-step">
+            <div class="stepper-circle active">3</div>
+            <span class="stepper-label active-label">View Results</span>
         </div>
     </div>
 
-    <!-- Skill Gap Details -->
+    <!-- Hero banner -->
+    <div class="result-hero">
+        <div class="result-hero-left">
+            <h1>Your Skill Gap Analysis</h1>
+            <p>Personalised assessment for <strong>{{ job_role }}</strong></p>
+        </div>
+        <div class="readiness-pill {% if 'Job Ready' in readiness %}pill-ready{% elif 'Almost' in readiness %}pill-almost{% else %}pill-not{% endif %}">
+            {% if 'Job Ready' in readiness %}🎉
+            {% elif 'Almost' in readiness %}⚡
+            {% else %}📚
+            {% endif %}
+            {{ readiness }}
+        </div>
+    </div>
+
+    <!-- Summary cards -->
+    <div class="summary-row">
+        <div class="s-card">
+            <span class="s-icon">🎯</span>
+            <div>
+                <div class="s-label">Target Role</div>
+                <div class="s-val">{{ job_role }}</div>
+            </div>
+        </div>
+        <div class="s-card">
+            <span class="s-icon">📊</span>
+            <div>
+                <div class="s-label">Gap Score</div>
+                <div class="s-val">{{ total_gap }}</div>
+            </div>
+        </div>
+        <div class="s-card">
+            <span class="s-icon">🧠</span>
+            <div>
+                <div class="s-label">AI Prediction</div>
+                <div class="s-val" style="font-size:16px;">{{ readiness }}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Skill analysis table -->
     <div class="section">
         <h3 class="section-title">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M9 11H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2zm2-7h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11z"/>
-            </svg>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M19 3h-4.18C14.4 1.84 13.3 1 12 1c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1z"/></svg>
             Detailed Skill Analysis
         </h3>
-        
-        <div class="table-container">
+        <div style="overflow-x:auto;">
             <table class="modern-table">
                 <thead>
                     <tr>
@@ -91,62 +288,32 @@
                 <tbody>
                     {% for row in gap_details %}
                     <tr>
-                        <td class="skill-name">
-                            <span class="skill-dot"></span>
-                            {{ row.skill }}
-                        </td>
                         <td>
-                            <div class="level-badge level-{{ row.user_level }}">
-                                Level {{ row.user_level }}
+                            <div class="skill-name-cell">
+                                <span class="skill-dot"></span>
+                                {{ row.skill }}
                             </div>
                         </td>
+                        <td><span class="lv-badge lv-{{ row.user_level }}">Level {{ row.user_level }}</span></td>
+                        <td><span class="lv-badge required">Level {{ row.required_level }}</span></td>
                         <td>
-                            <div class="level-badge required">
-                                Level {{ row.required_level }}
-                            </div>
-                        </td>
-                        <td>
-                            <div class="importance-indicator">
-                                {% for i in range(row.weight|int) %}
-                                <span class="importance-dot filled"></span>
-                                {% endfor %}
-                                {% for i in range(5 - row.weight|int) %}
-                                <span class="importance-dot"></span>
-                                {% endfor %}
+                            <div class="importance-dots">
+                                {% for i in range(row.weight|int) %}<span class="imp-dot filled"></span>{% endfor %}
+                                {% for i in range(5 - row.weight|int) %}<span class="imp-dot"></span>{% endfor %}
                             </div>
                         </td>
                         <td>
                             <span class="status-badge status-{{ row.status }}">
-                                {% if row.status == "Strong" %}✓
-                                {% elif row.status == "Weak" %}!
-                                {% else %}✗
-                                {% endif %}
+                                {% if row.status == "Strong" %}✓{% elif row.status == "Weak" %}!{% elif row.status == "Missing" %}✗{% else %}~{% endif %}
                                 {{ row.status }}
                             </span>
                         </td>
                         <td>
-
                             {% if row.critical %}
-
-                            <span style="
-                            background:#fee2e2;
-                            color:#991b1b;
-                            padding:6px 12px;
-                            border-radius:20px;
-                            font-size:12px;
-                            font-weight:600;
-                            ">
-
-                            ⚠ Critical Skill
-
-                            </span>
-
+                            <span class="critical-tag">⚠ Critical</span>
                             {% else %}
-
-                            <span style="color:#64748b;">—</span>
-
+                            <span style="color:#cbd5e1; font-size:18px;">—</span>
                             {% endif %}
-
                         </td>
                     </tr>
                     {% endfor %}
@@ -158,113 +325,118 @@
     <!-- Recommendations -->
     <div class="section">
         <h3 class="section-title">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-            </svg>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
             Priority Skills to Focus On
         </h3>
-        
         {% if recommendations %}
-        <div class="recommendations-grid">
+        <div class="recs-grid">
             {% for rec in recommendations %}
-            <div class="recommendation-card">
-                <div class="rec-priority">
-                    <div class="priority-badge priority-{{ loop.index }}">
-                        #{{ loop.index }}
-                    </div>
+            <div class="rec-card">
+                <div class="rec-rank">#{{ loop.index }}</div>
+                <h4>{{ rec.skill }}</h4>
+                <div class="priority-bar-wrap">
+                    <div class="priority-bar" style="width: {{ (rec.priority / recommendations[0].priority * 100) | int }}%"></div>
                 </div>
-                <div class="rec-content">
-                    <h4>{{ rec.skill }}</h4>
-                    <div class="rec-score">
-                        <span class="score-label">Priority Score:</span>
-                        <span class="score-value">{{ "%.1f"|format(rec.priority) }}</span>
-                    </div>
-                    <div class="rec-progress">
-                        <div class="progress-bar" style="width: {{ (rec.priority / recommendations[0].priority * 100) | int }}%"></div>
-                    </div>
-                </div>
+                <p class="priority-score">Priority score: {{ "%.1f"|format(rec.priority) }}</p>
             </div>
             {% endfor %}
         </div>
         {% else %}
-        <div class="success-message">
-            <div class="success-icon">🎉</div>
+        <div class="success-card">
+            <div class="s-emoji">🎉</div>
             <h4>Congratulations!</h4>
-            <p>You already meet all required skill levels for this role. You're job ready!</p>
+            <p>You meet all required skill levels for this role. You're job ready!</p>
         </div>
         {% endif %}
     </div>
 
+    <!-- AI Role Suggestions -->
     <div class="section">
-
-    <h3 class="section-title">
-
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-    <path d="M12 2l4 8 8 4-8 4-4 8-4-8-8-4 8-4z"/>
-    </svg>
-
-    AI Role Recommendations
-
-    </h3>
-
-    <div class="recommendations-grid">
-
-    {% for r in role_suggestions %}
-
-    <div class="recommendation-card">
-
-    <div class="rec-content">
-
-    <h4>{{ r.role }}</h4>
-
-    <p style="color:#64748b;font-size:14px;">
-    Skill gap score: {{ r.gap }}
-    </p>
-
+        <h3 class="section-title">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l4 8 8 4-8 4-4 8-4-8-8-4 8-4z"/></svg>
+            AI Role Recommendations
+        </h3>
+        <div class="role-sugg-grid">
+            {% for r in role_suggestions %}
+            <div class="role-sugg-card">
+                <h4>{{ r.role }}</h4>
+                <span class="gap-chip">Gap: {{ r.gap }}</span>
+            </div>
+            {% endfor %}
+        </div>
     </div>
 
-    </div>
-
-    {% endfor %}
-
-    </div>
-
-    </div>
-
-    <div class="button-container">
-        <button onclick="window.location.href='/'" class="btn-secondary">
-            Start New Assessment
+    <!-- Actions -->
+    <div class="btn-row">
+        <button onclick="window.location.href='/'" class="btn-secondary">Start New Assessment</button>
+        <button onclick="window.location.href='/dashboard'" class="btn-primary">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
+            Go to Dashboard
         </button>
     </div>
-
 </div>
 
+<button id="topBtn" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
+
 <script>
-// Celebration animation trigger
-window.addEventListener('load', function() {
-    createCelebration();
-});
-
-function createCelebration() {
-    const container = document.getElementById('celebration-container');
-    const colors = ['#2C7BE5', '#60A5FA', '#93C5FD', '#DBEAFE', '#FFFFFF'];
-    
-    for (let i = 0; i < 50; i++) {
-        setTimeout(() => {
-            const star = document.createElement('div');
-            star.className = 'celebration-star';
-            star.style.left = Math.random() * 100 + '%';
-            star.style.top = Math.random() * 100 + '%';
-            star.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
-            star.style.animationDelay = Math.random() * 0.5 + 's';
-            star.style.animationDuration = (Math.random() * 1 + 1) + 's';
-            
-            container.appendChild(star);
-            
-            setTimeout(() => star.remove(), 2000);
-        }, i * 20);
+// Confetti only for Job Ready
+{% if "Job Ready" in readiness %}
+(function(){
+    const canvas = document.getElementById('confetti-canvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    const pieces = [];
+    const colors = ['#2563eb','#10b981','#f59e0b','#ec4899','#8b5cf6','#06b6d4'];
+    for(let i=0;i<120;i++){
+        pieces.push({
+            x: Math.random()*canvas.width,
+            y: Math.random()*canvas.height - canvas.height,
+            r: Math.random()*6+4,
+            d: Math.random()*120+80,
+            color: colors[Math.floor(Math.random()*colors.length)],
+            tilt: Math.floor(Math.random()*10)-10,
+            tiltAngleInc: (Math.random()*0.07)+0.05,
+            tiltAngle: 0
+        });
     }
-}
-</script>
+    let angle = 0;
+    function draw(){
+        ctx.clearRect(0,0,canvas.width,canvas.height);
+        pieces.forEach(p=>{
+            ctx.beginPath();
+            ctx.lineWidth = p.r/2;
+            ctx.strokeStyle = p.color;
+            ctx.moveTo(p.x+p.tilt+p.r/4, p.y);
+            ctx.lineTo(p.x+p.tilt, p.y+p.tilt+p.r/4);
+            ctx.stroke();
+        });
+        update();
+    }
+    function update(){
+        angle+=0.01;
+        pieces.forEach((p,i)=>{
+            p.tiltAngle += p.tiltAngleInc;
+            p.y += (Math.cos(angle+p.d)+1+p.r/2)/2;
+            p.x += Math.sin(angle);
+            p.tilt = Math.sin(p.tiltAngle)*12;
+            if(p.x>canvas.width+20||p.x<-20||p.y>canvas.height){
+                pieces[i]={...p, x:Math.random()*canvas.width, y:-10};
+            }
+        });
+    }
+    let frames = 0;
+    const loop = setInterval(()=>{
+        draw();
+        frames++;
+        if(frames>200) clearInterval(loop);
+        if(frames>180) ctx.clearRect(0,0,canvas.width,canvas.height);
+    },16);
+})();
+{% endif %}
 
+window.onscroll = function(){
+    document.getElementById('topBtn').style.display = (document.documentElement.scrollTop > 200) ? 'block' : 'none';
+};
+</script>
 {% endblock %}

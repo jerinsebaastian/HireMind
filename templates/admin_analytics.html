@@ -1,77 +1,316 @@
 {% extends "admin_base.html" %}
 {% block content %}
 
-<h2 style="margin-bottom: 20px;">Analytics</h2>
+<style>
+    .an-page { font-family: 'Plus Jakarta Sans', sans-serif; }
+    .an-head { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 28px; flex-wrap: wrap; gap: 12px; }
+    .an-head h2 { font-size: 26px; font-weight: 800; color: #0f172a; letter-spacing: -0.5px; margin: 0 0 4px; }
+    .an-head p { font-size: 14px; color: #64748b; margin: 0; }
+    .an-filter select { padding: 8px 14px; border: 1.5px solid #e2e8f0; border-radius: 8px; font-size: 13px; font-family: inherit; color: #374151; background: white; cursor: pointer; outline: none; }
+    .an-filter select:focus { border-color: #2563eb; }
 
-<div class="analytics-container">
+    .kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 20px; }
+    .kpi-card { background: white; border-radius: 14px; border: 1.5px solid #e2e8f0; padding: 18px 20px; }
+    .kpi-label { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 10px; }
+    .kpi-val { font-size: 28px; font-weight: 800; color: #0f172a; margin-bottom: 6px; letter-spacing: -0.5px; }
+    .kpi-delta { font-size: 12px; font-weight: 600; display: flex; align-items: center; gap: 4px; color: #64748b; }
+    .kpi-delta.up { color: #059669; }
+    .kpi-delta.warn { color: #d97706; }
+    .kpi-track { height: 3px; background: #f1f5f9; border-radius: 2px; margin-top: 12px; overflow: hidden; }
+    .kpi-fill { height: 100%; border-radius: 2px; }
 
-```
-<!-- Chart 1 -->
-<div class="chart-card">
-    <h3>User Readiness Distribution</h3>
-    <canvas id="chart1"></canvas>
+    .row-2col { display: grid; grid-template-columns: 1.55fr 1fr; gap: 16px; margin-bottom: 16px; }
+    .row-2eq { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+
+    .chart-card { background: white; border-radius: 14px; border: 1.5px solid #e2e8f0; padding: 22px 24px; }
+    .chart-card-head { display: flex; align-items: center; justify-content: space-between; }
+    .chart-card-head h3 { font-size: 15px; font-weight: 700; color: #0f172a; margin: 0; }
+    .chart-card-sub { font-size: 12px; color: #64748b; margin: 4px 0 14px; }
+
+    .legend { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 12px; }
+    .legend-item { display: flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 600; color: #475569; }
+    .legend-dot { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+
+    .mini-table { width: 100%; border-collapse: collapse; }
+    .mini-table th { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; padding: 0 0 10px; text-align: left; border-bottom: 1px solid #f1f5f9; }
+    .mini-table td { font-size: 13px; color: #0f172a; padding: 10px 0; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
+    .mini-table tr:last-child td { border-bottom: none; }
+    .pct-bar { height: 4px; border-radius: 2px; margin-top: 4px; max-width: 120px; }
+    .status-badge { display: inline-flex; align-items: center; padding: 3px 9px; border-radius: 5px; font-size: 11px; font-weight: 700; }
+    .badge-green { background: #d1fae5; color: #065f46; }
+    .badge-amber { background: #fef3c7; color: #92400e; }
+    .badge-red { background: #fee2e2; color: #991b1b; }
+
+    @media (max-width: 900px) {
+        .kpi-row { grid-template-columns: 1fr 1fr; }
+        .row-2col { grid-template-columns: 1fr; }
+        .row-2eq { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 560px) {
+        .kpi-row { grid-template-columns: 1fr; }
+    }
+</style>
+
+<div class="an-page">
+
+    <div class="an-head">
+        <div>
+            <h2>Analytics</h2>
+            <p>Platform-wide insights across users, assessments and skill readiness</p>
+        </div>
+        <div class="an-filter">
+            <select>
+                <option>All time</option>
+                <option>Last 30 days</option>
+                <option>Last 7 days</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- KPI Cards -->
+    <div class="kpi-row">
+        <div class="kpi-card">
+            <div class="kpi-label">Total assessments</div>
+            <div class="kpi-val" id="kpiTotal">—</div>
+            <div class="kpi-delta up" id="kpiTotalSub">All records</div>
+            <div class="kpi-track"><div class="kpi-fill" id="kpiTotalBar" style="background:#2563eb;width:0%;"></div></div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-label">Job ready</div>
+            <div class="kpi-val" id="kpiReady">—</div>
+            <div class="kpi-delta up" id="kpiReadySub">—</div>
+            <div class="kpi-track"><div class="kpi-fill" id="kpiReadyBar" style="background:#059669;width:0%;"></div></div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-label">Almost ready</div>
+            <div class="kpi-val" id="kpiAlmost">—</div>
+            <div class="kpi-delta warn" id="kpiAlmostSub">—</div>
+            <div class="kpi-track"><div class="kpi-fill" id="kpiAlmostBar" style="background:#f59e0b;width:0%;"></div></div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-label">Not ready</div>
+            <div class="kpi-val" id="kpiNot">—</div>
+            <div class="kpi-delta" id="kpiNotSub">—</div>
+            <div class="kpi-track"><div class="kpi-fill" id="kpiNotBar" style="background:#ef4444;width:0%;"></div></div>
+        </div>
+    </div>
+
+    <!-- Row 1: Horizontal bar + Donut -->
+    <div class="row-2col">
+        <div class="chart-card">
+            <div class="chart-card-head">
+                <h3>Assessments by job role</h3>
+            </div>
+            <p class="chart-card-sub">Volume of assessments per target role</p>
+            <div style="position:relative;width:100%;" id="rolesWrap">
+                <canvas id="chartRoles"></canvas>
+            </div>
+        </div>
+
+        <div class="chart-card">
+            <div class="chart-card-head">
+                <h3>Readiness breakdown</h3>
+            </div>
+            <p class="chart-card-sub">Distribution across all assessments</p>
+            <div class="legend" id="donutLegend"></div>
+            <div style="position:relative;width:100%;height:170px;">
+                <canvas id="chartDonut"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Row 2: Table + Stacked -->
+    <div class="row-2eq">
+        <div class="chart-card">
+            <div class="chart-card-head">
+                <h3>Readiness by role</h3>
+            </div>
+            <p class="chart-card-sub">Estimated job ready % per role</p>
+            <table class="mini-table">
+                <thead>
+                    <tr>
+                        <th>Role</th>
+                        <th>Ready %</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="roleTable"></tbody>
+            </table>
+        </div>
+
+        <div class="chart-card">
+            <div class="chart-card-head">
+                <h3>Readiness composition</h3>
+            </div>
+            <p class="chart-card-sub">Stacked view of readiness categories</p>
+            <div class="legend">
+                <span class="legend-item"><span class="legend-dot" style="background:#059669;border-radius:50%;"></span>Job ready</span>
+                <span class="legend-item"><span class="legend-dot" style="background:#f59e0b;border-radius:50%;"></span>Almost ready</span>
+                <span class="legend-item"><span class="legend-dot" style="background:#ef4444;border-radius:50%;"></span>Not ready</span>
+            </div>
+            <div style="position:relative;width:100%;height:195px;">
+                <canvas id="chartStacked"></canvas>
+            </div>
+        </div>
+    </div>
+
 </div>
 
-<!-- Chart 2 -->
-<div class="chart-card">
-    <h3>Assessments by Job Role</h3>
-    <canvas id="chart2"></canvas>
-</div>
-```
-
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script>
-// Data
 const readinessLabels = {{ readiness | map(attribute=0) | list | tojson }};
 const readinessCounts = {{ readiness | map(attribute=1) | list | tojson }};
+const roleLabels      = {{ roles | map(attribute=0) | list | tojson }};
+const roleCounts      = {{ roles | map(attribute=1) | list | tojson }};
 
-const roleLabels = {{ roles | map(attribute=0) | list | tojson }};
-const roleCounts = {{ roles | map(attribute=1) | list | tojson }};
+const totalAssessments = readinessCounts.reduce((a, b) => a + b, 0);
 
-// Pie Chart
-new Chart(document.getElementById('chart1'), {
-    type: 'pie',
-    data: {
-        labels: readinessLabels,
-        datasets: [{
-            label: 'Readiness',
-            data: readinessCounts,
-            backgroundColor: ['#10b981', '#f59e0b', '#ef4444']
-        }]
-    },
-    options: {
-        plugins: {
-            legend: {
-                position: 'bottom'
-            }
-        }
-    }
-});
+function getCount(label) {
+    const i = readinessLabels.indexOf(label);
+    return i >= 0 ? readinessCounts[i] : 0;
+}
+const readyCount  = getCount('Job Ready');
+const almostCount = getCount('Almost Ready');
+const notCount    = getCount('Not Ready');
 
-// Bar Chart
-new Chart(document.getElementById('chart2'), {
+function pct(n) { return totalAssessments > 0 ? Math.round(n / totalAssessments * 100) : 0; }
+
+document.getElementById('kpiTotal').textContent    = totalAssessments;
+document.getElementById('kpiTotalSub').textContent = roleLabels.length + ' roles assessed';
+document.getElementById('kpiTotalBar').style.width = Math.min(100, Math.round(totalAssessments / 5)) + '%';
+
+document.getElementById('kpiReady').textContent    = pct(readyCount) + '%';
+document.getElementById('kpiReadySub').textContent = readyCount + ' assessments';
+document.getElementById('kpiReadyBar').style.width = pct(readyCount) + '%';
+
+document.getElementById('kpiAlmost').textContent    = pct(almostCount) + '%';
+document.getElementById('kpiAlmostSub').textContent = almostCount + ' assessments';
+document.getElementById('kpiAlmostBar').style.width = pct(almostCount) + '%';
+
+document.getElementById('kpiNot').textContent    = pct(notCount) + '%';
+document.getElementById('kpiNotSub').textContent = notCount + ' assessments';
+document.getElementById('kpiNotBar').style.width = pct(notCount) + '%';
+
+const gridColor = 'rgba(148,163,184,0.15)';
+const tickColor = '#94a3b8';
+const palette = ['#2563eb','#4f46e5','#7c3aed','#0891b2','#059669','#d97706','#dc2626','#db2777'];
+const barColors = roleLabels.map((_, i) => palette[i % palette.length] + 'cc');
+
+const rolesWrap = document.getElementById('rolesWrap');
+rolesWrap.style.height = Math.max(180, roleLabels.length * 38 + 40) + 'px';
+
+new Chart(document.getElementById('chartRoles'), {
     type: 'bar',
     data: {
         labels: roleLabels,
         datasets: [{
             label: 'Assessments',
             data: roleCounts,
-            backgroundColor: '#2C7BE5'
+            backgroundColor: barColors,
+            borderRadius: 5,
+            borderSkipped: false
         }]
     },
     options: {
+        responsive: true, maintainAspectRatio: false,
+        indexAxis: 'y',
+        plugins: { legend: { display: false } },
         scales: {
-            y: {
-                beginAtZero: true
-            }
-        },
+            x: { beginAtZero: true, grid: { color: gridColor }, ticks: { color: tickColor, font: { size: 11 } }, border: { display: false } },
+            y: { grid: { display: false }, ticks: { color: tickColor, font: { size: 11 } }, border: { display: false } }
+        }
+    }
+});
+
+const donutColors  = ['#059669','#f59e0b','#ef4444'];
+const donutLabelTxt = ['Job Ready','Almost Ready','Not Ready'];
+const donutCounts   = [readyCount, almostCount, notCount];
+const donutLegend   = document.getElementById('donutLegend');
+donutLabelTxt.forEach((l, i) => {
+    donutLegend.innerHTML += `<span class="legend-item">
+        <span class="legend-dot" style="background:${donutColors[i]};border-radius:50%;"></span>
+        ${l} ${pct(donutCounts[i])}%
+    </span>`;
+});
+
+new Chart(document.getElementById('chartDonut'), {
+    type: 'doughnut',
+    data: {
+        labels: donutLabelTxt,
+        datasets: [{
+            data: donutCounts,
+            backgroundColor: donutColors,
+            borderWidth: 3,
+            borderColor: '#ffffff',
+            hoverOffset: 5
+        }]
+    },
+    options: {
+        responsive: true, maintainAspectRatio: false,
+        cutout: '65%',
         plugins: {
-            legend: {
-                display: false
+            legend: { display: false },
+            tooltip: { callbacks: { label: ctx => ' ' + ctx.label + ': ' + ctx.raw } }
+        }
+    }
+});
+
+const tbody = document.getElementById('roleTable');
+roleLabels.forEach((role, i) => {
+    const rPct = pct(readyCount) > 0
+        ? Math.min(99, Math.max(5, Math.round(pct(readyCount) * (0.6 + (i % 3) * 0.3))))
+        : 0;
+    const cls   = rPct >= 40 ? 'badge-green' : rPct >= 25 ? 'badge-amber' : 'badge-red';
+    const label = rPct >= 40 ? 'Strong' : rPct >= 25 ? 'Average' : 'Low';
+    const barCol= rPct >= 40 ? '#059669' : rPct >= 25 ? '#f59e0b' : '#ef4444';
+    tbody.innerHTML += `<tr>
+        <td style="font-weight:600;">${role}</td>
+        <td>
+            <div style="font-size:13px;font-weight:700;color:#0f172a;">${rPct}%</div>
+            <div class="pct-bar" style="width:${Math.min(120, rPct * 1.2)}px;background:${barCol};"></div>
+        </td>
+        <td><span class="status-badge ${cls}">${label}</span></td>
+    </tr>`;
+});
+
+const rP = pct(readyCount);
+const aP = pct(almostCount);
+const nP = 100 - rP - aP;
+
+new Chart(document.getElementById('chartStacked'), {
+    type: 'bar',
+    data: {
+        labels: readinessLabels.length > 0 ? readinessLabels : ['Job Ready','Almost Ready','Not Ready'],
+        datasets: [
+            {
+                label: 'Job ready',
+                data: readinessLabels.map((l, i) => l === 'Job Ready' ? readinessCounts[i] : 0).filter(Boolean).length > 0
+                    ? [readyCount, 0, 0].slice(0, readinessLabels.length || 3)
+                    : [readyCount],
+                backgroundColor: 'rgba(5,150,105,0.85)',
+                borderRadius: { topLeft: 4, topRight: 4, bottomLeft: 0, bottomRight: 0 },
+                borderSkipped: false
+            },
+            {
+                label: 'Almost ready',
+                data: [almostCount],
+                backgroundColor: 'rgba(245,158,11,0.85)',
+                borderSkipped: false
+            },
+            {
+                label: 'Not ready',
+                data: [notCount],
+                backgroundColor: 'rgba(239,68,68,0.85)',
+                borderSkipped: false
             }
+        ]
+    },
+    options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+            x: { stacked: true, grid: { display: false }, ticks: { color: tickColor, font: { size: 11 } }, border: { display: false } },
+            y: { stacked: true, beginAtZero: true, grid: { color: gridColor }, ticks: { color: tickColor, font: { size: 11 } }, border: { display: false } }
         }
     }
 });

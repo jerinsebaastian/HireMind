@@ -1,180 +1,195 @@
 {% extends "base.html" %}
 {% block content %}
-
 <head>
-    <title>Edit Skill Profile - HireMind</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <title>Edit Skills – HireMind</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; }
+        body, .page-content { font-family: 'Plus Jakarta Sans', sans-serif; }
+
+        .page-wrapper { max-width: 760px; margin: 0 auto; }
+
+        .page-head {
+            text-align: center; margin-bottom: 32px;
+        }
+        .page-head h1 { font-size: 30px; font-weight: 800; color: #0f172a; letter-spacing: -0.7px; margin-bottom: 10px; }
+        .page-head p { font-size: 15px; color: #475569; max-width: 500px; margin: 0 auto; line-height: 1.6; }
+
+        .skills-list { display: flex; flex-direction: column; gap: 14px; margin-bottom: 28px; }
+
+        .skill-card {
+            background: white; border: 1.5px solid #e2e8f0;
+            border-radius: 16px; padding: 22px 24px;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .skill-card:hover { border-color: #93c5fd; box-shadow: 0 4px 16px rgba(37,99,235,0.08); }
+
+        .skill-top {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 16px;
+        }
+        .skill-name { font-size: 17px; font-weight: 700; color: #0f172a; }
+        .skill-emoji { font-size: 26px; }
+
+        .levels-row {
+            display: grid; grid-template-columns: repeat(4,1fr); gap: 10px;
+        }
+
+        .level-opt { position: relative; }
+        .level-opt input[type="radio"] { position: absolute; opacity: 0; pointer-events: none; }
+        .level-opt label {
+            display: flex; flex-direction: column; align-items: center;
+            padding: 13px 8px;
+            border: 1.5px solid #e2e8f0; border-radius: 12px;
+            cursor: pointer; transition: all 0.2s; text-align: center;
+            background: #f8fafc;
+        }
+        .level-opt label:hover { border-color: #93c5fd; transform: translateY(-2px); }
+        .level-opt input:checked + label {
+            background: linear-gradient(135deg, #eff6ff, #dbeafe);
+            border-color: #2563eb;
+            box-shadow: 0 4px 12px rgba(37,99,235,0.15);
+        }
+
+        .lv-dot { width: 38px; height: 38px; border-radius: 50%; margin-bottom: 7px; }
+        .lv-0 { background: linear-gradient(135deg,#94a3b8,#64748b); }
+        .lv-1 { background: linear-gradient(135deg,#fb923c,#ea580c); }
+        .lv-2 { background: linear-gradient(135deg,#3b82f6,#1d4ed8); }
+        .lv-3 { background: linear-gradient(135deg,#10b981,#059669); }
+
+        .lv-text { font-size: 12px; font-weight: 700; color: #0f172a; margin-bottom: 2px; }
+        .lv-desc { font-size: 11px; color: #64748b; }
+
+        .cta-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+
+        .btn-back {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 12px 20px; background: white; border: 2px solid #e2e8f0;
+            color: #475569; border-radius: 10px; font-size: 14px; font-weight: 700;
+            font-family: inherit; cursor: pointer; transition: all 0.2s;
+        }
+        .btn-back:hover { border-color: #2563eb; color: #2563eb; }
+
+        .btn-save {
+            display: inline-flex; align-items: center; gap: 8px;
+            padding: 13px 30px;
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            color: white; border: none; border-radius: 10px;
+            font-size: 15px; font-weight: 700; font-family: inherit;
+            cursor: pointer; transition: all 0.2s;
+        }
+        .btn-save:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(37,99,235,0.35); }
+
+        .toast {
+            position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(100px);
+            background: #0f172a; color: white;
+            padding: 14px 28px; border-radius: 12px;
+            font-size: 14px; font-weight: 600;
+            display: flex; align-items: center; gap: 10px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+            transition: transform 0.3s ease; z-index: 9999;
+        }
+        .toast.show { transform: translateX(-50%) translateY(0); }
+
+        @media (max-width: 500px) {
+            .levels-row { grid-template-columns: repeat(2,1fr); }
+        }
+    </style>
 </head>
 
-<div class="container">
+<div class="page-wrapper">
+    <div class="page-head">
+        <h1>Edit Skill Profile</h1>
+        <p>Update your skill levels anytime. These are used in future assessments to give you personalised insights.</p>
+    </div>
 
-    <div class="header">
-        <div class="logo">
-            <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
-                <circle cx="20" cy="20" r="18" fill="#2C7BE5" opacity="0.1"/>
-                <path d="M20 8L28 14V26L20 32L12 26V14L20 8Z" fill="#2C7BE5"/>
-                <circle cx="20" cy="20" r="4" fill="white"/>
-            </svg>
-            <h1>HireMind</h1>
+    <form id="skillForm">
+        <div class="skills-list">
+            {% for skill in ["Python","SQL","Machine Learning","HTML","CSS"] %}
+            <div class="skill-card">
+                <div class="skill-top">
+                    <span class="skill-name">{{ skill }}</span>
+                    <span class="skill-emoji">
+                        {% if skill == "Python" %}🐍
+                        {% elif skill == "SQL" %}🗄️
+                        {% elif skill == "Machine Learning" %}🧠
+                        {% elif skill == "HTML" %}🌐
+                        {% elif skill == "CSS" %}🎨
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="levels-row">
+                    <div class="level-opt">
+                        <input type="radio" name="{{ skill }}" id="{{ skill }}_0" value="0" {% if skills.get(skill) == 0 %}checked{% endif %}>
+                        <label for="{{ skill }}_0">
+                            <div class="lv-dot lv-0"></div>
+                            <span class="lv-text">Not Familiar</span>
+                            <span class="lv-desc">No experience</span>
+                        </label>
+                    </div>
+                    <div class="level-opt">
+                        <input type="radio" name="{{ skill }}" id="{{ skill }}_1" value="1" {% if skills.get(skill) == 1 %}checked{% endif %}>
+                        <label for="{{ skill }}_1">
+                            <div class="lv-dot lv-1"></div>
+                            <span class="lv-text">Beginner</span>
+                            <span class="lv-desc">Basic knowledge</span>
+                        </label>
+                    </div>
+                    <div class="level-opt">
+                        <input type="radio" name="{{ skill }}" id="{{ skill }}_2" value="2" {% if skills.get(skill) == 2 %}checked{% endif %}>
+                        <label for="{{ skill }}_2">
+                            <div class="lv-dot lv-2"></div>
+                            <span class="lv-text">Intermediate</span>
+                            <span class="lv-desc">Working proficiency</span>
+                        </label>
+                    </div>
+                    <div class="level-opt">
+                        <input type="radio" name="{{ skill }}" id="{{ skill }}_3" value="3" {% if skills.get(skill) == 3 %}checked{% endif %}>
+                        <label for="{{ skill }}_3">
+                            <div class="lv-dot lv-3"></div>
+                            <span class="lv-text">Advanced</span>
+                            <span class="lv-desc">Expert level</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
         </div>
-    </div>
 
-    <div class="content-header">
-        <h2>Edit Your Skill Profile</h2>
-        <p class="subtitle">
-            Update your skill levels anytime. These skills will be used in future assessments.
-        </p>
-    </div>
-
-<form id="skillForm">
-
-<div class="skills-container">
-
-{% for skill in ["Python","SQL","Machine Learning","HTML","CSS"] %}
-
-<div class="skill-assessment-card">
-
-<div class="skill-header">
-
-<h3>{{ skill }}</h3>
-
-<div class="skill-icon">
-{% if skill == "Python" %}🐍
-{% elif skill == "SQL" %}🗄️
-{% elif skill == "Machine Learning" %}🧠
-{% elif skill == "HTML" %}🌐
-{% elif skill == "CSS" %}🎨
-{% endif %}
+        <div class="cta-row">
+            <button type="button" class="btn-back" onclick="window.location.href='/dashboard'">
+                ← Back to Dashboard
+            </button>
+            <button type="button" class="btn-save" onclick="saveSkills()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z"/></svg>
+                Save Updated Skills
+            </button>
+        </div>
+    </form>
 </div>
 
-</div>
-
-<div class="proficiency-options">
-
-<!-- NOT FAMILIAR -->
-
-<div class="proficiency-option">
-<input type="radio"
-name="{{ skill }}"
-id="{{ skill }}_0"
-value="0"
-{% if skills.get(skill) == 0 %}checked{% endif %}>
-
-<label for="{{ skill }}_0">
-<div class="level-indicator level-0"></div>
-<span class="level-text">Not Familiar</span>
-<span class="level-desc">No experience</span>
-</label>
-</div>
-
-<!-- BEGINNER -->
-
-<div class="proficiency-option">
-<input type="radio"
-name="{{ skill }}"
-id="{{ skill }}_1"
-value="1"
-{% if skills.get(skill) == 1 %}checked{% endif %}>
-
-<label for="{{ skill }}_1">
-<div class="level-indicator level-1"></div>
-<span class="level-text">Beginner</span>
-<span class="level-desc">Basic knowledge</span>
-</label>
-</div>
-
-<!-- INTERMEDIATE -->
-
-<div class="proficiency-option">
-<input type="radio"
-name="{{ skill }}"
-id="{{ skill }}_2"
-value="2"
-{% if skills.get(skill) == 2 %}checked{% endif %}>
-
-<label for="{{ skill }}_2">
-<div class="level-indicator level-2"></div>
-<span class="level-text">Intermediate</span>
-<span class="level-desc">Working proficiency</span>
-</label>
-</div>
-
-<!-- ADVANCED -->
-
-<div class="proficiency-option">
-<input type="radio"
-name="{{ skill }}"
-id="{{ skill }}_3"
-value="3"
-{% if skills.get(skill) == 3 %}checked{% endif %}>
-
-<label for="{{ skill }}_3">
-<div class="level-indicator level-3"></div>
-<span class="level-text">Advanced</span>
-<span class="level-desc">Expert level</span>
-</label>
-</div>
-
-</div>
-
-</div>
-
-{% endfor %}
-
-</div>
-
-<div class="button-container">
-
-<button
-type="button"
-class="btn-primary"
-onclick="saveSkills()">
-
-Save Updated Skills
-
-</button>
-
-</div>
-
-</form>
-
-</div>
+<div class="toast" id="toast">✓ Skills updated successfully!</div>
 
 <script>
-
-function saveSkills(){
-
-const skills=["Python","SQL","Machine Learning","HTML","CSS"]
-
-let data={}
-
-for(let skill of skills){
-
-let selected=document.querySelector(
-'input[name="'+skill+'"]:checked'
-)
-
-data[skill]=parseInt(selected.value)
-
+function saveSkills() {
+    const skills = ["Python","SQL","Machine Learning","HTML","CSS"];
+    let data = {};
+    for (let skill of skills) {
+        let sel = document.querySelector('input[name="'+skill+'"]:checked');
+        if (!sel) { alert("Please select a level for " + skill); return; }
+        data[skill] = parseInt(sel.value);
+    }
+    fetch("/save_skill_profile", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data)
+    }).then(r => r.json()).then(() => {
+        const toast = document.getElementById('toast');
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 3000);
+    });
 }
-
-fetch("/save_skill_profile",{
-
-method:"POST",
-
-headers:{
-"Content-Type":"application/json"
-},
-
-body:JSON.stringify(data)
-
-})
-
-.then(res=>res.json())
-.then(res=>alert("Skills updated successfully!"))
-
-}
-
 </script>
 
 {% endblock %}

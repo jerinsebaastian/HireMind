@@ -3,71 +3,81 @@
 
 <h2>Assessments</h2>
 
-<form method="get">
-    <input type="text" name="search" placeholder="Search" value="{{ request.args.get('search','') }}">
-    
-    <select name="readiness">
-        <option value="">All</option>
-        <option {% if request.args.get('readiness')=='Job Ready' %}selected{% endif %}>Job Ready</option>
-        <option {% if request.args.get('readiness')=='Almost Ready' %}selected{% endif %}>Almost Ready</option>
-        <option {% if request.args.get('readiness')=='Not Ready' %}selected{% endif %}>Not Ready</option>
-    </select>
+<!-- Filter bar -->
+<div class="card" style="margin-bottom:20px;">
+    <form method="get" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0;">
+        <input type="text" name="search" placeholder="Search by user or role…" value="{{ request.args.get('search','') }}" style="min-width:200px;">
+        <select name="readiness">
+            <option value="">All Readiness</option>
+            <option {% if request.args.get('readiness')=='Job Ready' %}selected{% endif %} value="Job Ready">Job Ready</option>
+            <option {% if request.args.get('readiness')=='Almost Ready' %}selected{% endif %} value="Almost Ready">Almost Ready</option>
+            <option {% if request.args.get('readiness')=='Not Ready' %}selected{% endif %} value="Not Ready">Not Ready</option>
+        </select>
+        <button type="submit" class="btn-primary" style="margin:0;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+            Search
+        </button>
+    </form>
+</div>
 
-    <button type="submit">Filter</button>
-</form>
+<!-- Table -->
+<div class="card" style="padding:0;overflow:hidden;">
+    <table class="modern-table">
+        <thead>
+            <tr>
+                <th>User</th>
+                <th>Role</th>
+                <th>Readiness</th>
+                <th>Date</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for r in data %}
+            <tr>
+                <td style="font-weight:600;">{{ r[0] }}</td>
+                <td>{{ r[1] }}</td>
+                <td>
+                    <span style="
+                        display:inline-flex;align-items:center;gap:4px;
+                        padding:5px 12px;border-radius:20px;font-size:12px;font-weight:700;
+                        background:{% if 'Job Ready' in r[2] %}#d1fae5;color:#065f46{% elif 'Almost' in r[2] %}#fef3c7;color:#92400e{% else %}#fee2e2;color:#991b1b{% endif %};
+                    ">
+                        {% if 'Job Ready' in r[2] %}✓{% elif 'Almost' in r[2] %}!{% else %}✗{% endif %}
+                        {{ r[2] }}
+                    </span>
+                </td>
+                <td style="color:#64748b;font-size:13px;">{{ r[3] }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 
-<table class="modern-table">
-<tr><th>User</th><th>Role</th><th>Status</th><th>Date</th></tr>
+    <!-- Pagination -->
+    {% set page = request.args.get('page',1)|int %}
+    <div style="padding:16px 20px;border-top:1px solid #f1f5f9;display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+        {% if page > 1 %}
+        <a href="?page={{ page-1 }}&search={{ request.args.get('search','') }}&readiness={{ request.args.get('readiness','') }}"
+           style="padding:6px 12px;border:1.5px solid #e2e8f0;border-radius:7px;font-size:13px;font-weight:600;color:#374151;text-decoration:none;transition:all 0.2s;">← Prev</a>
+        {% else %}
+        <span style="padding:6px 12px;border:1.5px solid #f1f5f9;border-radius:7px;font-size:13px;font-weight:600;color:#cbd5e1;">← Prev</span>
+        {% endif %}
 
-{% for r in data %}
-<tr>
-<td>{{ r[0] }}</td>
-<td>{{ r[1] }}</td>
-<td>{{ r[2] }}</td>
-<td>{{ r[3] }}</td>
-</tr>
-{% endfor %}
+        {% for p in range(1, total_pages + 1) %}
+            {% if p == page %}
+            <span style="padding:6px 12px;background:#2563eb;color:white;border-radius:7px;font-size:13px;font-weight:700;">{{ p }}</span>
+            {% else %}
+            <a href="?page={{ p }}&search={{ request.args.get('search','') }}&readiness={{ request.args.get('readiness','') }}"
+               style="padding:6px 12px;border:1.5px solid #e2e8f0;border-radius:7px;font-size:13px;font-weight:600;color:#374151;text-decoration:none;">{{ p }}</a>
+            {% endif %}
+        {% endfor %}
 
-</table>
-
-<!-- ✅ PAGINATION -->
-<div style="margin-top:20px;">
-
-{% set page = request.args.get('page',1)|int %}
-
-<!-- 🚫 PREV BUTTON -->
-{% if page > 1 %}
-<a href="?page={{ page-1 }}&search={{ request.args.get('search','') }}&readiness={{ request.args.get('readiness','') }}">
-    ⬅ Prev
-</a>
-{% else %}
-<span style="color:gray;">⬅ Prev</span>
-{% endif %}
-
-&nbsp;&nbsp;
-
-<!-- 🔢 PAGE NUMBERS -->
-{% for p in range(1, total_pages + 1) %}
-    {% if p == page %}
-        <strong>{{ p }}</strong>
-    {% else %}
-        <a href="?page={{ p }}&search={{ request.args.get('search','') }}&readiness={{ request.args.get('readiness','') }}">
-            {{ p }}
-        </a>
-    {% endif %}
-{% endfor %}
-
-&nbsp;&nbsp;
-
-<!-- NEXT BUTTON -->
-{% if page < total_pages %}
-<a href="?page={{ page+1 }}&search={{ request.args.get('search','') }}&readiness={{ request.args.get('readiness','') }}">
-    Next ➡
-</a>
-{% else %}
-<span style="color:gray;">Next ➡</span>
-{% endif %}
-
+        {% if page < total_pages %}
+        <a href="?page={{ page+1 }}&search={{ request.args.get('search','') }}&readiness={{ request.args.get('readiness','') }}"
+           style="padding:6px 12px;border:1.5px solid #e2e8f0;border-radius:7px;font-size:13px;font-weight:600;color:#374151;text-decoration:none;">Next →</a>
+        {% else %}
+        <span style="padding:6px 12px;border:1.5px solid #f1f5f9;border-radius:7px;font-size:13px;font-weight:600;color:#cbd5e1;">Next →</span>
+        {% endif %}
+    </div>
 </div>
 
 {% endblock %}
