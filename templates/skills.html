@@ -153,19 +153,6 @@
     </style>
 </head>
 
-{% if previous_assessments > 0 %}
-<script>
-window.onload = function() {
-    let choice = confirm(
-        "You have previous skill assessment data.\n\nPress OK to use previous skills.\nPress Cancel to take a new assessment."
-    );
-    if (choice) {
-        window.location.href = "/use_previous_skills_result?job_role={{ job_role }}";
-    }
-};
-</script>
-{% endif %}
-
 <div class="page-wrapper">
 
     <!-- Stepper -->
@@ -263,7 +250,7 @@ window.onload = function() {
                 Save to Profile
             </button>
             <button type="submit" class="btn-analyze">
-                Analyse My Skills
+                Analyze My Skills
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6z"/></svg>
             </button>
         </div>
@@ -271,7 +258,9 @@ window.onload = function() {
 </div>
 
 <script>
-function usePreviousSkills() {
+
+    /*
+  function usePreviousSkills() {
     fetch('/use_previous_skills', { method: 'POST' })
         .then(r => r.json())
         .then(data => {
@@ -279,8 +268,9 @@ function usePreviousSkills() {
                 let radio = document.getElementById(skill + "_" + data[skill]);
                 if (radio) radio.checked = true;
             }
-        });
-}
+        }); 
+
+     */
 
 function saveSkills() {
     const skills = ["Python","SQL","Machine Learning","HTML","CSS"];
